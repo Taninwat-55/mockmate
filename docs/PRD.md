@@ -130,11 +130,11 @@ This single journey covers the entire application lifecycle for Phase 1.
 
 ---
 
-## 7. Open Questions
+## 7. Open Questions — Resolved
 
-These need to be resolved before or during development:
-
-- Which LLM provider for MVP? (Claude API, OpenAI GPT-4o, or Gemini — affects cost and quality)
-- What is the session token budget per interview? (Affects free tier sustainability)
-- How do we handle resume PDF parsing reliably? (PDF text extraction can be inconsistent)
-- What is the exact rubric for the grading matrix? (Needs to be defined before the prompt is written)
+| Question | Decision | Reasoning |
+|---|---|---|
+| Which LLM provider? | **Google Gemini Flash** | Most generous free tier (1,500 req/day), good quality for structured tasks, first-class Vercel AI SDK support via `@ai-sdk/google`. Provider abstraction via Vercel AI SDK means swapping to Claude or OpenAI later is a one-line change. |
+| Session token budget? | **~5,000 tokens per session** | Breakdown: system prompt (~600) + resume (~600) + JD (~400) + 6 interview exchanges (~2,400) + grading output (~800). At Gemini Flash free tier this supports 300+ sessions/day — well above MVP needs. |
+| Resume PDF parsing? | **Plain text textarea for MVP** | Removes parsing complexity entirely. Users paste resume text. PDF upload via Gemini Files API deferred to Phase 2 when S3 file storage is added. |
+| Grading matrix rubric? | **3 dimensions, scored 1–5** | Technical Accuracy, Communication Clarity, Problem-solving Approach. Each dimension returns a score, one strength observation, one weakness observation, and one actionable tip. Overall output includes a Hire / No Hire / Strong Hire signal with a 2-sentence summary. AI returns this as structured JSON so the frontend renders it predictably. |
