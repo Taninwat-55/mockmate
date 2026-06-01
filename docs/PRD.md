@@ -164,7 +164,7 @@ A Vercel cron job runs daily and sets any `IN_PROGRESS` session with a `last_act
 | Response rendering | Streaming, not spinner | Vercel AI SDK streams tokens as they arrive; user sees words appearing in real time |
 | Database write latency | ≤ 500ms | Exchange saved in background; user is not blocked waiting for DB confirmation |
 | Input validation | Server-side, before LLM call | Character limits enforced in the API route, not just the frontend |
-| Session token budget | ~5,000 tokens per session | System prompt (~600) + resume (~600) + JD (~400) + exchanges (~2,400) + grading (~800) |
+| Session token budget | ~5,000 tokens per session | System prompt (~600) + resume (~600) + JD (~400) + exchanges (~2,000) + grading (~800) |
 | Free tier sustainability | ≤ 300 sessions/day | Well within Gemini Flash free tier ceiling (1,500 requests/day) |
 | Authentication | Required for all session data | Unauthenticated users cannot start or view sessions |
 
@@ -209,7 +209,7 @@ This single journey covers the entire application lifecycle for Phase 1.
 | Question | Decision | Reasoning |
 |---|---|---|
 | Which LLM provider? | **Google Gemini Flash** | Most generous free tier (1,500 req/day), good quality for structured tasks, first-class Vercel AI SDK support via `@ai-sdk/google`. Provider abstraction via Vercel AI SDK means swapping to Claude or OpenAI later is a one-line change. |
-| Session token budget? | **~5,000 tokens per session** | Breakdown: system prompt (~600) + resume (~600) + JD (~400) + 6 interview exchanges (~2,400) + grading output (~800). At Gemini Flash free tier this supports 300+ sessions/day — well above MVP needs. |
+| Session token budget? | **~5,000 tokens per session** | Breakdown: system prompt (~600) + resume (~600) + JD (~400) + 5 interview exchanges (~2,000) + grading output (~800). At Gemini Flash free tier this supports 300+ sessions/day — well above MVP needs. |
 | Resume input? | **Plain text textarea for MVP** | Removes parsing complexity entirely. Users paste resume text. PDF upload via Gemini Files API deferred to Phase 2 when S3 file storage is added. |
 | Grading matrix rubric? | **3 dimensions, scored 1–5** | Technical Accuracy, Communication Clarity, Problem-solving Approach. Each dimension returns a score, one strength observation, one weakness observation, and one actionable tip. Overall output includes a Hire / No Hire / Strong Hire signal. AI returns structured JSON. |
 | Session end condition? | **Exactly 5 main questions** | Removes ambiguity. Follow-ups don't count toward the limit. User can also end early. |
