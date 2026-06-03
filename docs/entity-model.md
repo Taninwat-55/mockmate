@@ -29,6 +29,7 @@ erDiagram
         string status
         string jobDescription
         string resume
+        string title
         int mainQuestionCount
         datetime createdAt
         datetime lastActiveAt
@@ -114,6 +115,7 @@ One record per interview attempt. Created when the user submits the New Session 
 | status | Enum | Default: IN_PROGRESS | Current state of the session |
 | jobDescription | String | Required, max 6,000 chars | JD pasted by the user |
 | resume | String | Required, max 6,000 chars | Resume text pasted by the user |
+| title | String | Required, max 100 chars | Short human-readable label for the session — user fills this in on the New Session form (e.g. "Frontend Engineer at Spotify") |
 | mainQuestionCount | Int | Default: 0, max: 5 | How many main questions have been asked |
 | createdAt | DateTime | Auto | When the session was started |
 | lastActiveAt | DateTime | Auto-updated | Updated on every exchange — used by the cleanup cron |
@@ -206,3 +208,6 @@ Session tracks the process. Feedback is the output. They have different lifecycl
 
 **subscriptionStatus on User is a Phase 2 stub**  
 The field exists so the Stripe integration in Phase 2 has a column to write to. For MVP, every user is `FREE`. No billing logic is implemented.
+
+**title on Session surfaces from wireframe review**  
+The wireframe design review (Phase 3) revealed that session cards on the Dashboard need a human-readable label. The raw `jobDescription` text is too long to display on a card. `title` is a short, user-provided string filled in on the New Session form — added to the entity model during Phase 3 as a result of the design review.
