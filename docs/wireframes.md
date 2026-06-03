@@ -135,10 +135,74 @@ One element borrowed from Direction B: the bolder, larger rendering of the curre
 
 ---
 
+---
+
+## Feedback & Score Page
+
+Two directions were explored. Both show State 1 (STRONG HIRE) and State 2 (NO HIRE).
+
+---
+
+### Direction A — Verdict Hero + Stacked Rows
+
+Centered signal · dimensions as wide scannable rows
+
+![Feedback Direction A — Verdict Hero + Stacked Rows](assets/feedback-direction-a.png)
+
+**What this direction does:**
+- Large centered verdict badge is the first thing the eye lands on — filled black pill for STRONG HIRE, outlined box for NO HIRE
+- "YOUR RESULT" / "NOT THIS ROUND" label above the badge sets the emotional tone before the signal is read
+- Overall composite score pill (e.g. 4.7/5 · avg of 3) gives an instant summary
+- 2-sentence AI summary centered below the score
+- Three stacked dimension rows with plenty of horizontal space for written feedback — each row shows: dimension name, score + bar meter, and three labelled observations (Strength, Weakness, Next time) with +/− icons
+- Star rating and action buttons anchored at the bottom
+
+---
+
+### Direction B — Split Hero + Scorecard Grid
+
+Signal stamp beside summary · 3-up dimension cards
+
+![Feedback Direction B — Split Hero + Scorecard Grid](assets/feedback-direction-b.png)
+
+**What this direction does:**
+- Split hero card: verdict badge + overall score on the left, session title + AI summary on the right
+- Three equal-width dimension cards in a row — all three dimensions visible without scrolling
+- Each card contains dimension name, score, bar meter, and the three observations
+- Compact — entire report potentially fits on screen without scrolling
+
+---
+
+## Design Review Notes — Feedback & Score Page
+
+| Observation | Direction A | Direction B |
+|---|---|---|
+| Verdict badge impact | Large, centered, commanding | Smaller, left-aligned in split hero |
+| Written feedback readability | Stacked rows give each observation room to breathe | 3-column cards cramp the text — users skim instead of read |
+| Overall score visibility | Score pill below badge — clear | Score pill in hero card — also clear |
+| Dimension comparison | Sequential — scroll to compare | Side-by-side — instant comparison |
+| Scroll required | Yes — 3 rows is slightly long | No — fits on one screen |
+| Emotional framing | "NOT THIS ROUND" for NO HIRE — softer | Same |
+
+**Issues identified during review:**
+
+1. Session duration ("18 min", "9 min") is not stored in the entity model. Computable at render time from `session.createdAt` to `session.lastActiveAt` — no new field needed.
+2. "Ended early" indicator: both normal completion and early exit use `status: COMPLETED`. Inferred at render time by checking `mainQuestionCount < 5` when `status = COMPLETED`. No schema change needed.
+3. Overall composite score (4.7/5) is not stored in the Feedback entity — it is the average of the 3 dimension scores, computed at render time. No new DB column needed.
+4. "YOUR RESULT" vs "NOT THIS ROUND" label: standardise to "YOUR RESULT" in implementation for consistency — the badge itself communicates the outcome.
+
+---
+
+## Decision — Feedback & Score Page
+
+**Direction A — confirmed**, with the split hero card layout borrowed from Direction B for the top section. The split hero (signal left, title + summary right) makes a stronger first impression. Stacked dimension rows below — written feedback needs horizontal space to communicate clearly. Direction B's 3-column grid cramps the text that is the actual product value.
+
+---
+
 ## Screens Remaining
 
 | Screen | Status |
 |---|---|
-| Dashboard | Done — Direction A selected |
-| Active Interview | Done — Direction A selected |
-| Feedback & Score Page | Not started |
+| Dashboard | Done — Direction A |
+| Active Interview | Done — Direction A |
+| Feedback & Score Page | Done — Direction A with Direction B hero |
