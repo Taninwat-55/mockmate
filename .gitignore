@@ -8,6 +8,12 @@ node_modules/
 out/
 build/
 
+# Turborepo
+.turbo/
+
+# TypeScript build info
+*.tsbuildinfo
+
 # Environment variables
 .env
 .env.local

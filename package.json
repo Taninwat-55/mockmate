@@ -1,0 +1,21 @@
+{
+  "name": "mockmate",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "db:generate": "pnpm --filter @mockmate/db db:generate",
+    "db:push": "pnpm --filter @mockmate/db db:push",
+    "db:migrate": "pnpm --filter @mockmate/db db:migrate",
+    "db:studio": "pnpm --filter @mockmate/db db:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.16"
+  },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
