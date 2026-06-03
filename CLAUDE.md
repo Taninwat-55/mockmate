@@ -119,8 +119,10 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 **When stuck**
 - If something isn't working after 2–3 attempts, stop and explain the problem. Don't keep trying random fixes. Ask if requirements are unclear.
 
-**Branching**
+**Branching** (see `docs/project-management.md` for the full model)
+- `main` = production (protected), `develop` = integration. Branch task work off `develop`.
 - One branch per feature/fix: `feature/<name>` or `fix/<name>`.
+- PR into `develop`, not `main`. Releases are a separate PR `develop` → `main`.
 - Ask before deleting a branch after merge.
 
 **Commits**
@@ -131,12 +133,12 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 
 **Per-feature workflow**
 1. Write the feature into `docs/active-feature.md` (scope + acceptance).
-2. Create the branch.
+2. Create the branch off `develop` (`feature/<name>` or `fix/<name>`).
 3. Implement it.
 4. Verify in the browser; run `pnpm build` and fix any errors. (Unit tests come later.)
 5. Iterate as needed.
 6. Commit only after build passes and it works — with permission.
-7. Merge to `main`.
+7. Open a PR into `develop`; merge once CI is green.
 8. Delete the branch after merge (ask first).
 9. Move the entry to History in `docs/active-feature.md`.
 
@@ -206,6 +208,7 @@ Do not implement these unless explicitly asked: PDF resume upload (S3/CloudFront
 ## Reference Docs
 
 - `docs/active-feature.md` — what's being built right now; keep it current (see Working Agreement)
+- `docs/project-management.md` — branching model, versioning, CI, Kanban/PM process
 - `docs/PRD.md` — product requirements: problem, persona, scope, success metrics, AI behavior rules
 - `docs/architecture/system-architecture.md` — full system diagram and data flows
 - `docs/entity-model.md` — full field definitions and design rationale
