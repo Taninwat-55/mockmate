@@ -1,0 +1,44 @@
+name: CI
+
+# Runs on every PR targeting the integration and production lines.
+# This is the status check that `main` branch protection requires.
+on:
+  pull_request:
+    branches: [develop, main]
+
+# A newer push to the same PR cancels the in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: install · generate · lint · build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Reads the pinned pnpm version from package.json "packageManager".
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # @mockmate/db re-exports @prisma/client; the client must be generated
+      # before lint/build can resolve it. Generate needs no live database.
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
