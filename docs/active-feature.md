@@ -8,12 +8,16 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-_Nothing in progress. Phase 4 setup just completed (monorepo, dependencies, foundation)._
-
-- **Feature:** —
-- **Scope:** —
-- **Acceptance:** —
-- **Branch:** —
+- **Feature:** Google login via NextAuth (issue #1, entry point of the user flow)
+- **Scope:** NextAuth v5 + Google OAuth + Prisma adapter (database sessions). Login
+  page, sign-out, server-side route guard on `/dashboard`. Minimal placeholder
+  dashboard (real dashboard is #2).
+- **Acceptance:** Google sign-in creates/links a `User` + `Session`; protected
+  routes redirect unauthenticated users to `/login`; sign-out clears the session;
+  `pnpm build` passes; verified in browser.
+- **Branch:** `feature/google-auth`
+- **Notes:** Route protection is server-side (Prisma can't run in Edge middleware).
+  `session.user.id` exposure deferred to #2 where it's needed.
 
 ---
 
