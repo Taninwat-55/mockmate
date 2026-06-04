@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { signOutAction } from "@/actions/auth"
+import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
 import { Button } from "@/components/ui/button"
 
 export default async function DashboardPage() {
@@ -7,20 +8,26 @@ export default async function DashboardPage() {
   const user = session?.user
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome{user?.name ? `, ${user.name}` : ""}.
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Signed in as {user?.email}. The interview dashboard arrives in the next task.
-        </p>
+    <main className="flex flex-1 flex-col items-center px-6 py-10">
+      <header className="flex w-full max-w-2xl items-center justify-between gap-4">
+        <div className="text-left">
+          <h1 className="text-xl font-semibold tracking-tight">
+            Welcome{user?.name ? `, ${user.name}` : ""}.
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Paste a resume and a job description to start a mock interview.
+          </p>
+        </div>
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline" size="sm">
+            Sign out
+          </Button>
+        </form>
+      </header>
+
+      <div className="mt-10 w-full max-w-2xl">
+        <NewInterviewForm />
       </div>
-      <form action={signOutAction}>
-        <Button type="submit" variant="outline">
-          Sign out
-        </Button>
-      </form>
     </main>
   )
 }
