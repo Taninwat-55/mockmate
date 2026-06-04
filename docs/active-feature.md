@@ -8,7 +8,20 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Nothing in progress — pick up the next card (issue #4: interactive chat session)._
+- **#4 Interactive multi-turn chat session (streaming).** Replace the placeholder
+  `/interview/[id]` with the live §6 loop. New streaming API route
+  (`POST /api/interview/[id]`) drives the loop: save the answer to the DB before the
+  LLM call, judge weakness, `determineNextAction` to ask a follow-up / advance / end,
+  log a hidden evaluation note per finished main question, end at 5 questions or on
+  "End Interview Early". `streamText().toUIMessageStreamResponse()` + `useChat`
+  (`@ai-sdk/react`, v6). Opening question seeded by a `startInterview` Server Action.
+  Server-side 2,000-char cap; error/retry/timeout per PRD §7 (`maxRetries: 2`).
+  - **Acceptance:** AI asks 5 JD/resume-grounded questions one at a time; follows up
+    ≤2× on weak/short (<40-word) answers, then marks the question unresolved and moves
+    on; tokens stream live; every exchange persists `Question`/`Message` rows and
+    updates `mainQuestionCount`/`lastActiveAt`; reload rehydrates the transcript from
+    the DB; completion (5 questions or End Early) flips the session to `COMPLETED` and
+    shows an in-page complete state. Grading matrix + feedback page are #5.
 
 ---
 

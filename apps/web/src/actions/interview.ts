@@ -1,10 +1,18 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { generateText } from "ai"
 import { z } from "zod"
 
-import { prisma } from "@mockmate/db"
+import {
+  prisma,
+  InterviewSessionStatus,
+  MessageRole,
+  MessageType,
+} from "@mockmate/db"
 import { auth } from "@/auth"
+import { interviewModel } from "@/lib/ai"
+import { buildInterviewMessages } from "@/lib/interviewer-prompt"
 
 // Server-side input caps (PRD §6). Resume and JD are each limited to 6,000 chars
 // to control token cost; the title is a short user-facing label.
@@ -73,4 +81,117 @@ export async function createInterviewSession(
 
   // redirect throws internally, so it must run outside the try/catch above.
   redirect(`/interview/${interview.id}`)
+}
+
+// The opening question. Seeded non-streaming (a simple mutation, so a Server Action)
+// the first time the interview screen mounts — only answer-turn replies stream, which
+// keeps the "assistant speaks first" case out of `useChat`. Idempotent: if the session
+// already has its first question, the existing one is returned so a refresh or double
+// mount can't create a second.
+type StartInterviewResult =
+  | { success: true; question: { id: string; text: string } }
+  | { success: false; error: string }
+
+export async function startInterview(
+  sessionId: string,
+): Promise<StartInterviewResult> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: "You need to be signed in." }
+  }
+
+  const interview = await prisma.interviewSession.findFirst({
+    where: { id: sessionId, userId: session.user.id },
+    select: {
+      id: true,
+      status: true,
+      resume: true,
+      jobDescription: true,
+      questions: {
+        orderBy: { questionNumber: "asc" },
+        take: 1,
+        select: { messages: { take: 1, select: { id: true, content: true } } },
+      },
+    },
+  })
+  if (!interview) {
+    return { success: false, error: "Interview not found." }
+  }
+  if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
+    return { success: false, error: "This interview has already ended." }
+  }
+
+  // Already opened — return the existing first question.
+  const existing = interview.questions[0]?.messages[0]
+  if (existing) {
+    return { success: true, question: { id: existing.id, text: existing.content } }
+  }
+
+  try {
+    const { text } = await generateText({
+      model: interviewModel,
+      maxRetries: 2,
+      messages: buildInterviewMessages({
+        resume: interview.resume,
+        jobDescription: interview.jobDescription,
+      }),
+    })
+
+    const message = await prisma.$transaction(async (tx) => {
+      const question = await tx.question.create({
+        data: {
+          interviewSessionId: interview.id,
+          questionNumber: 1,
+          questionText: text,
+        },
+      })
+      const created = await tx.message.create({
+        data: {
+          questionId: question.id,
+          role: MessageRole.AI,
+          type: MessageType.MAIN_QUESTION,
+          content: text,
+        },
+        select: { id: true, content: true },
+      })
+      await tx.interviewSession.update({
+        where: { id: interview.id },
+        data: { mainQuestionCount: 1, lastActiveAt: new Date() },
+      })
+      return created
+    })
+
+    return { success: true, question: { id: message.id, text: message.content } }
+  } catch {
+    return {
+      success: false,
+      error: "Couldn't start the interview. Please try again.",
+    }
+  }
+}
+
+// "End Interview Early" (PRD §6 trigger 2). Flips the session to COMPLETED from
+// whatever was logged; grading off the evaluation notes is a separate feature (#5).
+// Idempotent: ending an already-ended session is a no-op success.
+export async function endInterviewEarly(
+  sessionId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: "You need to be signed in." }
+  }
+
+  try {
+    await prisma.interviewSession.updateMany({
+      where: {
+        id: sessionId,
+        userId: session.user.id,
+        status: InterviewSessionStatus.IN_PROGRESS,
+      },
+      data: { status: InterviewSessionStatus.COMPLETED, lastActiveAt: new Date() },
+    })
+    return { success: true }
+  } catch {
+    return { success: false, error: "Couldn't end the interview. Please try again." }
+  }
 }
