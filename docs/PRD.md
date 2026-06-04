@@ -3,7 +3,7 @@
 **Project:** MockMate  
 **Author:** Taninwat Kaewpankan (Ice)  
 **Phase:** 1 — MVP Specification  
-**Last Updated:** 2026-06-01  
+**Last Updated:** 2026-06-05  
 **Status:** Final
 
 ---
@@ -99,7 +99,7 @@ Users can view their past sessions and feedback from their dashboard. No compari
 | Live audio/voice input | Adds cost and complexity; validates after text loop is proven |
 | Multiple AI interviewer personas | One excellent persona beats two mediocre ones |
 | PDF resume upload | Plain text textarea validates the core loop first |
-| Stripe billing | Deferred until the core lifecycle works flawlessly |
+| Stripe billing | Planned for Phase 2 — credit-based model fully specced in `docs/monetization.md` |
 | Job description library / presets | Nice to have, not essential to the core loop |
 | Team or group workspaces | Enterprise feature, irrelevant at MVP scale |
 | Mobile-native app | Web-first is sufficient for target persona |
