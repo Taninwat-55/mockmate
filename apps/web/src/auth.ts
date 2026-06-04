@@ -21,4 +21,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   session: { strategy: "database" },
   pages: { signIn: "/login" },
+  callbacks: {
+    // Expose the DB user id on the session so Server Actions can scope writes to
+    // the signed-in user. With the database strategy, `user` is the Prisma User.
+    session({ session, user }) {
+      session.user.id = user.id
+      return session
+    },
+  },
 })
