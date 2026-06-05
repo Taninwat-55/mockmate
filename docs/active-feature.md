@@ -8,19 +8,20 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
+- _Nothing in flight — pick the next issue from the board (Ready column)._
+
+---
+
+## History
+
 - 2026-06-05  PDF upload + saved CV (#29): "Upload PDF" button on the interview
   form parses the file to plain text **client-side** (pdfjs-dist, no file stored),
   fills the resume textarea, and saves the text to `User.savedResume` via the
   `updateSavedResume` Server Action. New sessions pre-fill the textarea from the
   saved CV with a "Using saved CV — paste to override" hint. Text-only MVP — not
-  the S3-backed Phase-2 version. DB moves to migrate history (baselined `0_init` +
+  the S3-backed Phase-2 version. DB moved to migrate history (baselined `0_init` +
   `add_saved_resume`). Upload hardened: 10 MB size guard, `.pdf`-extension
-  fallback for empty MIME, length-aware over-6,000-char message.
-  _PR open — awaiting CI/merge._
-
----
-
-## History
+  fallback for empty MIME, length-aware over-6,000-char message.  ✓
 
 - 2026-06-05  Settings page (#30): auth-guarded `/settings` with Profile (editable
   display name via Server Action, read-only Google email + avatar), Billing (Free
