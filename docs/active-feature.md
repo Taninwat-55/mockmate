@@ -8,7 +8,8 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-_Nothing in progress — ready for the next issue._
+**#6 — Session history on dashboard** (P1)
+Session list below the new-interview form: title, status badge, date. COMPLETED sessions link to `/interview/[id]/feedback`. Server Component, direct Prisma read, scoped to the current user.
 
 ---
 
