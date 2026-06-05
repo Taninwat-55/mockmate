@@ -8,19 +8,17 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-**#7 — Session persistence + resume-unfinished banner (P1)**
+**#8 — AI error handling: retry + exponential backoff (P1)**
 
-Scope: detect any `IN_PROGRESS` session on dashboard load and display a prominent resume banner above the new-interview form, linking back to `/interview/[id]`. Shows only the most recently active session (`lastActiveAt` desc). No banner when there are no IN_PROGRESS sessions.
-
-Acceptance criteria:
-- Banner appears on next dashboard visit if a session is IN_PROGRESS
-- Banner links to `/interview/[id]` (rehydration already works)
-- No banner shown when there are no IN_PROGRESS sessions
-- `pnpm build` passes; verified in browser
+- Server: `judgeAnswerWeak` wrapped in try/catch — returns structured 503 JSON after SDK retries exhausted; `streamText` already uses `maxRetries: 2` (SDK handles backoff).
+- Server: `generateEvaluationNote` gets `maxRetries: 2` to prevent silent evaluation-note loss inside `onFinish`.
+- Client: all requirements already implemented in #4 — `onError` toast, 5s timeout, Retry button → `regenerate()`, input stays enabled.
 
 ---
 
 ## History
+
+- 2026-06-05  Session persistence + resume-unfinished banner (#7): `ResumeBanner` async Server Component queries most-recent IN_PROGRESS session by `lastActiveAt` desc, renders amber callout above the form with "Resume interview →" link, returns null when clean  ✓
 
 - 2026-06-05  Session history on dashboard (#6): Server Component reads user's `InterviewSession` records via Prisma, renders status badges (COMPLETED/ABANDONED/IN_PROGRESS), COMPLETED rows link to feedback page, empty state shown  ✓
 
