@@ -3,7 +3,7 @@
 **Project:** MockMate  
 **Phase:** 2 — Post-MVP  
 **Author:** Taninwat Kaewpankan (Ice)  
-**Last Updated:** 2026-06-05  
+**Last Updated:** 2026-06-05 (revised: weekly free session, paid perks)  
 **Status:** Planned — not yet implemented
 
 ---
@@ -18,17 +18,22 @@ This model suits the job-seeker use case: users burst-use the product during an 
 
 ## 2. Pricing
 
-| Pack | Price (DKK) | Price (USD approx.) | Credits |
-|---|---|---|---|
-| Single session | 25 DKK | ~$3.50 | 1 |
-| 5-session pack | 99 DKK | ~$14 | 5 |
+| Tier | Price (DKK) | Price (USD approx.) | Credits | Perks |
+|---|---|---|---|---|
+| Free | 0 DKK | — | 1 / week | Web report only, last 3 sessions in history |
+| Single session | 25 DKK | ~$3.50 | 1 | + Email feedback report |
+| 5-session pack | 99 DKK | ~$14 | 5 | + Email feedback report, full session history |
 
-**Free session:** Every new user gets 1 free session, no card required. This is the primary conversion hook — users experience the full product before committing any money. No card friction, no trial period countdown.
+**Free tier:** Users get 1 free session every 7 days, no card required. The cadence is long enough that it doesn't compete with the 25 DKK single session — active job seekers applying to multiple roles will want more than one session per week and will pay. Free users can see only their last 3 sessions in the dashboard history.
+
+**Paid perks (both tiers):** After each paid session the existing AWS Lambda / Resend pipeline emails the full feedback report to the user. Free users get the web report only. This requires no new infrastructure — the Lambda already fires on session completion; it just needs to check whether the session was paid.
+
+**5-session pack only:** Full session history visible on the dashboard (no 3-session cap).
 
 ### Why these numbers
 
 - 25 DKK is below the "coffee" psychological threshold. Nobody thinks twice.
-- 99 DKK for 5 saves the user ~20% per session and gives MockMate a larger upfront payment.
+- 99 DKK for 5 = ~20 DKK per session, saving ~20% vs buying individually (99 vs 125 DKK).
 - Both prices comfortably cover infrastructure costs even at very low user volume. 10 paying users buying single sessions covers Vercel + Neon + domain for the month.
 
 ---
@@ -38,15 +43,15 @@ This model suits the job-seeker use case: users burst-use the product during an 
 Before an interview session is created, the following check runs server-side (in the "start interview" Server Action):
 
 ```
-if user.freeSessionUsed == false:
-    → allow the session
-    → set user.freeSessionUsed = true
-    → create InterviewSession
+if now() > user.freeSessionRefreshAt:
+    → allow the session (free)
+    → set user.freeSessionRefreshAt = now() + 7 days
+    → create InterviewSession (isPaid: false)
     → proceed
 
 else if user.creditBalance > 0:
     → deduct 1 credit (atomic DB transaction)
-    → create InterviewSession
+    → create InterviewSession (isPaid: true)
     → proceed
 
 else:
@@ -56,6 +61,8 @@ else:
 ```
 
 The credit deduction and `InterviewSession` creation must happen inside a **Prisma transaction** to prevent race conditions where two concurrent requests could both pass the balance check before either deducts.
+
+`isPaid` on `InterviewSession` determines whether the Lambda emails the feedback report after the session completes. Free sessions skip the email step.
 
 ---
 
@@ -116,9 +123,17 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ### Additions to `User` model
 
 ```prisma
-creditBalance    Int     @default(0)
-freeSessionUsed  Boolean @default(false)
+creditBalance        Int       @default(0)
+freeSessionRefreshAt DateTime  @default(now())  // epoch = eligible immediately on signup
 ```
+
+### Addition to `InterviewSession` model
+
+```prisma
+isPaid  Boolean  @default(false)
+```
+
+Used to gate the post-session email Lambda and to enforce the history cap: free users see only their 3 most recent sessions on the dashboard; paid sessions are always visible regardless of count.
 
 ### New model: `CreditPurchase`
 
@@ -168,15 +183,17 @@ No Stripe Customer Portal needed — there are no subscriptions to manage. This 
 
 When this feature is picked up, implement in this order:
 
-1. Schema migration — add `creditBalance`, `freeSessionUsed` to `User`; add `CreditPurchase` model
+1. Schema migration — add `creditBalance`, `freeSessionRefreshAt` to `User`; add `isPaid` to `InterviewSession`; add `CreditPurchase` model
 2. Create Stripe products and price IDs in the Stripe Dashboard
 3. Add env vars to `.env.local` and Vercel project settings
 4. `POST /api/stripe/checkout` — checkout session creation
 5. `POST /api/stripe/webhook` — event handling and credit fulfillment
-6. Session gating — update the "start interview" flow with the credit check (Prisma transaction)
+6. Session gating — update the "start interview" flow with the weekly free check + credit check (Prisma transaction); set `isPaid` on `InterviewSession`
+6a. Dashboard history cap — query shows last 3 sessions for free users; all sessions for users with any paid history
 7. `/buy` page — credit pack selection UI
 8. `/buy/success` page — confirmation screen after payment
-9. `/profile` page — credits, session history, purchase history
+9. Email gating — update Lambda invocation to only fire when `session.isPaid == true`
+10. `/profile` page — credits, session history, purchase history
 
 ---
 
