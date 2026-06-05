@@ -8,25 +8,23 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#4 Interactive multi-turn chat session (streaming).** Replace the placeholder
-  `/interview/[id]` with the live §6 loop. New streaming API route
-  (`POST /api/interview/[id]`) drives the loop: save the answer to the DB before the
-  LLM call, judge weakness, `determineNextAction` to ask a follow-up / advance / end,
-  log a hidden evaluation note per finished main question, end at 5 questions or on
-  "End Interview Early". `streamText().toUIMessageStreamResponse()` + `useChat`
-  (`@ai-sdk/react`, v6). Opening question seeded by a `startInterview` Server Action.
-  Server-side 2,000-char cap; error/retry/timeout per PRD §7 (`maxRetries: 2`).
-  - **Acceptance:** AI asks 5 JD/resume-grounded questions one at a time; follows up
-    ≤2× on weak/short (<40-word) answers, then marks the question unresolved and moves
-    on; tokens stream live; every exchange persists `Question`/`Message` rows and
-    updates `mainQuestionCount`/`lastActiveAt`; reload rehydrates the transcript from
-    the DB; completion (5 questions or End Early) flips the session to `COMPLETED` and
-    shows an in-page complete state. Grading matrix + feedback page are #5.
+**Issue #5 — Structured grading matrix + feedback page (P0)**
+
+After a session reaches COMPLETED, generate the grading matrix from the 5 `evaluationNote` fields
+(not the message history) via `generateObject` + Zod schema. Persist as a `Feedback` row (1:1 on
+`InterviewSession`). Render `/interview/[id]/feedback`: signal badge, 3 dimension cards
+(score + strength/weakness/tip), overall summary, user rating widget. Grading is idempotent — if
+`Feedback` already exists, serve the cached row. Error handling: toast + retry on `generateObject`
+failure, session data never lost.
 
 ---
 
 ## History
 
+- 2026-06-05  Interactive multi-turn chat session (#4): streaming API route
+  (`POST /api/interview/[id]`), `InterviewChat` client component, §6 loop (5 questions,
+  ≤2 follow-ups, unresolved marking, hidden eval notes), DB writes before LLM call,
+  COMPLETED state + End Early button, transcript rehydrated on reload  ✓
 - 2026-06-04  AI interviewer persona + §6 behavior rules (#3): immutable system
   prompt with prompt-injection partitioning, pure question/follow-up/unresolved
   state machine, hidden evaluation-note schema + `generateEvaluationNote`
