@@ -8,12 +8,13 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-**#6 — Session history on dashboard** (P1)
-Session list below the new-interview form: title, status badge, date. COMPLETED sessions link to `/interview/[id]/feedback`. Server Component, direct Prisma read, scoped to the current user.
+_Nothing in progress — ready for the next issue._
 
 ---
 
 ## History
+
+- 2026-06-05  Session history on dashboard (#6): Server Component reads user's `InterviewSession` records via Prisma, renders status badges (COMPLETED/ABANDONED/IN_PROGRESS), COMPLETED rows link to feedback page, empty state shown  ✓
 
 - 2026-06-05  Structured grading matrix + feedback page (#5): `generateObject` + Zod schema from
   5 evaluationNotes, `Feedback` row persisted, `/interview/[id]/feedback` renders signal badge +
