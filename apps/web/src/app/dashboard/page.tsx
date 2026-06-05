@@ -1,9 +1,8 @@
 import { auth } from "@/auth"
-import { signOutAction } from "@/actions/auth"
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
 import { ResumeBanner } from "@/components/dashboard/ResumeBanner"
 import { SessionHistory } from "@/components/dashboard/SessionHistory"
-import { Button } from "@/components/ui/button"
+import { UserMenu } from "@/components/dashboard/UserMenu"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -20,11 +19,11 @@ export default async function DashboardPage() {
             Paste a resume and a job description to start a mock interview.
           </p>
         </div>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline" size="sm">
-            Sign out
-          </Button>
-        </form>
+        <UserMenu
+          name={user?.name ?? null}
+          email={user?.email ?? null}
+          image={user?.image ?? null}
+        />
       </header>
 
       {user?.id && (
