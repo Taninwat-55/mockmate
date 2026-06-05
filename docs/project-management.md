@@ -50,9 +50,6 @@ something to verify. Minimum pipeline:
 2. `pnpm lint`
 3. `pnpm build`
 
-This is the first task of the next session — branch protection's "require status
-checks" is meaningless until this exists.
-
 ---
 
 ## 4. Versioning
@@ -64,8 +61,7 @@ checks" is meaningless until this exists.
 
 - Start at **`v0.1.0`** (pre-1.0 = MVP, API/UX can still change freely).
 - Tag each release on `main`: `git tag v0.1.0 && git push origin v0.1.0`.
-- Conventional Commits (already adopted) map cleanly to version bumps and can later
-  drive an automated CHANGELOG (e.g. changesets) — not needed yet.
+- Conventional Commits map cleanly to version bumps.
 
 ---
 
@@ -76,46 +72,126 @@ Mapped to branches once the repo is connected to Vercel:
 - `develop` → staging domain (Vercel preview with an assigned domain)
 - Every PR → its own ephemeral preview URL
 
-Not wired yet — set up when the first deploy happens.
-
 ---
 
-## 6. Project Management — Kanban, not full Scrum
+## 6. Project Management — Kanban
 
-Solo development uses **Kanban** (flow-based), not Scrum ceremonies (sprints,
-standups, retros) which exist to coordinate a team. We borrow Scrum's useful
-*artifacts* — a prioritized backlog and a definition of done — without the meetings.
+Solo development uses **Kanban** (flow-based), not Scrum (sprints, standups, retros exist to coordinate a team, not a solo developer). We borrow Scrum's useful artifacts — a prioritized backlog and a clear definition of done — without the meetings.
 
-**Board:** GitHub Projects (Kanban template).
-Columns: **Backlog → Ready → In Progress → In Review → Done**
-- *Backlog* — everything not yet started
-- *Ready* — scoped and pickable
-- *In Progress* — actively being built (keep WIP low: 1–2 items)
-- *In Review* — PR open
-- *Done* — merged
+**Board:** GitHub Projects (Kanban board linked in the repo).
 
-**Labels:** `feature`, `fix`, `chore`, `docs` + priority (`P0`, `P1`, `P2`).
+### Columns
 
-**Milestones:** map to phases — `MVP (Phase 1)` holds the launch-critical features.
+| Column | Meaning |
+|---|---|
+| **Backlog** | Idea captured, not yet groomed. May lack scope or acceptance criteria. |
+| **Ready** | Groomed and pickable. Has a clear title, acceptance criteria, labels, and milestone. |
+| **In Progress** | Actively being built. **WIP limit: 2 max.** One is ideal. |
+| **In Review** | PR is open and passing CI. Waiting for review/merge. |
+| **Done** | Merged to `develop`. Card closed. |
 
-**Definition of Done:** build passes, works in the browser, merged to `develop`,
-card moved to Done, entry logged in `docs/active-feature.md`.
+**The Backlog → Ready distinction matters.** Moving a card to Ready is a deliberate act — it means the issue is properly scoped and ready to be started without ambiguity. Don't pick up a Backlog card directly.
+
+**WIP limit:** Never have more than 2 cards In Progress at once. Context-switching kills momentum. Finish before starting.
+
+### Definition of Done
+
+An issue is Done when:
+- `pnpm build` passes with no errors
+- Feature works end-to-end in the browser
+- PR merged to `develop`
+- Card moved to Done on the board
+- Entry logged in `docs/active-feature.md`
 
 ---
 
 ## 7. Issue Conventions
 
-- One issue per feature/fix; title is a short outcome (e.g. "Google login via NextAuth").
-- Label it, assign a priority, attach to the `MVP (Phase 1)` milestone.
-- The issue is the *what/why*; `docs/active-feature.md` tracks the *currently building* one.
+**Rule: nothing gets built without an issue.** Every branch, PR, and commit traces back to an issue number.
+
+### Mandatory fields on every issue
+
+- **Title** — outcome-oriented, not task-oriented
+  - ✅ "User can sign in with Google"
+  - ❌ "implement NextAuth"
+- **Labels** — one from each group: type + priority + area (all three, always)
+- **Milestone** — attach to the relevant phase (`MVP (Phase 1)`, `Phase 2`, etc.)
+- **Acceptance criteria** — checkboxes that define what "done" looks like
+
+### Issue template
+
+```
+**Why**
+One sentence on why this matters or what it unblocks.
+
+**Acceptance criteria**
+- [ ] Specific, testable condition
+- [ ] Specific, testable condition
+- [ ] pnpm build passes, feature works in browser
+
+**Notes** (optional)
+Links to spec docs, constraints, known gotchas.
+```
+
+Acceptance criteria is the most important habit. It answers "how do I know when I'm done?" without ambiguity.
 
 ---
 
-## 8. Next-Session Task List
+## 8. PR Conventions
 
-1. **CI:** add `.github/workflows/ci.yml` (install + lint + build on PRs).
-2. **Branch protection:** require status checks (the new CI job) on `main`.
-3. **GitHub Project:** create Kanban board, confirm columns.
-4. **Labels & milestone:** create labels + `MVP (Phase 1)` milestone.
-5. **Backlog:** turn PRD scope into prioritized issues.
-6. **Start building:** pull the first card (likely auth — entry point of the user flow).
+Every PR has a title in Conventional Commits format and a body from the PR template
+(`.github/pull_request_template.md`). The body must always include `Closes #<issue>` —
+this auto-closes the issue and moves the card to Done on merge.
+
+**PR template:**
+```
+## What
+Brief description of the change.
+
+## Closes
+Closes #[issue number]
+
+## How to test
+Steps to verify the feature works in the browser.
+
+## Checklist
+- [ ] pnpm build passes
+- [ ] Works in the browser
+- [ ] No console errors
+```
+
+---
+
+## 9. Label Reference
+
+Three dimensions. Every issue gets one label from each.
+
+### Type — what kind of work
+
+| Label | When to use |
+|---|---|
+| `feat` | New feature or functionality |
+| `bug` | Something broken |
+| `chore` | Infra, config, tooling — no user-facing change |
+| `docs` | Documentation only |
+| `refactor` | Code change with no behavior change |
+
+### Priority — how urgent
+
+| Label | Meaning |
+|---|---|
+| `P0: critical` | Blocks launch or breaks production — drop everything |
+| `P1: high` | Current focus, should be in this working period |
+| `P2: medium` | Important but not urgent, next up |
+| `P3: low` | Nice to have, backlog |
+
+### Area — what part of the system
+
+| Label | What it covers |
+|---|---|
+| `frontend` | UI, components, pages |
+| `backend` | API routes, server actions, DB logic |
+| `ai` | LLM calls, prompts, grading |
+| `auth` | Login, session, NextAuth |
+| `billing` | Stripe, credits, profile page |
+| `infra` | CI, Vercel, Terraform, cron |

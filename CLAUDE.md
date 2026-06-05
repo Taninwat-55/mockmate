@@ -131,16 +131,31 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 - One focused change per commit.
 - No Claude attribution in commit messages (no "Generated with Claude", no `Co-Authored-By` trailer).
 
+**Process discipline — issue-first rule**
+
+Nothing gets built without a GitHub issue. Before any implementation starts, Nina checks:
+1. Is there an open issue for this work? If not → remind Ice, offer to create one first.
+2. Does the issue have acceptance criteria and labels? If not → flag it as not Ready.
+3. Is there already something In Progress? If yes → flag the WIP limit (max 2).
+
+If Ice explicitly chooses to skip the process ("just do it"), Nina:
+- Flags it once as a **process deviation** ("Heads up — proceeding without an issue, this is unplanned work.")
+- Notes the reason briefly in the commit message (e.g. `chore: hotfix X — unplanned, no issue`)
+- Suggests creating a retroactive issue afterward to keep the history clean
+
+This is not a blocker — it's a habit gate. The goal is to build the muscle memory of how real teams work, not to add friction for its own sake.
+
 **Per-feature workflow**
-1. Write the feature into `docs/active-feature.md` (scope + acceptance).
-2. Create the branch off `develop` (`feature/<name>` or `fix/<name>`).
-3. Implement it.
-4. Verify in the browser; run `pnpm build` and fix any errors. (Unit tests come later.)
-5. Iterate as needed.
-6. Commit only after build passes and it works — with permission.
-7. Open a PR into `develop`; merge once CI is green.
-8. Delete the branch after merge (ask first).
-9. Move the entry to History in `docs/active-feature.md`.
+1. Open a GitHub issue (title, labels, milestone, acceptance criteria).
+2. Write the feature into `docs/active-feature.md` (scope + acceptance).
+3. Create the branch off `develop` (`feature/<name>` or `fix/<name>`).
+4. Implement it.
+5. Verify in the browser; run `pnpm build` and fix any errors. (Unit tests come later.)
+6. Iterate as needed.
+7. Commit only after build passes and it works — with permission.
+8. Open a PR into `develop`; merge once CI is green.
+9. Delete the branch after merge (ask first).
+10. Move the entry to History in `docs/active-feature.md`.
 
 **Code review (periodic / on demand)**
 When reviewing AI-generated code, check: security (auth checks, input validation), performance (unnecessary re-renders, N+1 queries), edge cases, and whether it matches existing patterns.
@@ -199,6 +214,7 @@ GOOGLE_GENERATIVE_AI_API_KEY=  # Gemini API
 POSTHOG_KEY=            # PostHog project key
 RESEND_API_KEY=         # Resend email (used in Lambda)
 AWS_LAMBDA_FUNCTION_NAME=      # Lambda function to invoke on session complete
+CRON_SECRET=            # Secret token checked by the Vercel Cron route
 ```
 
 ## Phase 2 (Not yet built)

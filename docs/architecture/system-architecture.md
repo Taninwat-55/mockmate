@@ -1,7 +1,7 @@
 # System Architecture
 
 **Project:** MockMate  
-**Last Updated:** 2026-06-03  
+**Last Updated:** 2026-06-05  
 **Status:** Final — MVP architecture with Phase 2 components shown
 
 ---
@@ -41,6 +41,7 @@ flowchart TD
 
     PostHog(["PostHog\nAnalytics"])
     EmailSvc(["Email Service\nResend / SES"])
+    Stripe(["Stripe\nPayment Processing — Phase 2"])
 
     Browser -->|"HTTPS — page requests\nstreaming responses"| NextApp
     Browser -->|"Client SDK\nanalytics events"| PostHog
@@ -54,6 +55,8 @@ flowchart TD
     Lambda -->|"Send summary email"| EmailSvc
     NextApp -.->|"Upload / serve files\nPhase 2"| CloudFront
     CloudFront -.->|"Origin"| S3
+    NextApp -.->|"Create checkout session\nPhase 2"| Stripe
+    Stripe -.->|"Webhook: payment events\nPhase 2"| NextApp
 ```
 
 ---
@@ -75,6 +78,7 @@ flowchart TD
 | **Amazon CloudFront** | CDN in front of S3 — serves stored files to users with low latency — Phase 2 only | AWS edge network |
 | **PostHog** | Product analytics — client SDK fires events (session_started, session_completed, feedback_rated) from the browser | PostHog Cloud |
 | **Email Service** | Sends post-session summary emails — invoked by Lambda | Resend or AWS SES |
+| **Stripe** | Payment processing — handles one-time credit purchases via hosted Checkout. Next.js creates checkout sessions; Stripe fires webhooks on payment completion to fulfill credits. Phase 2 only. | Stripe Cloud |
 
 ---
 
@@ -98,7 +102,10 @@ Browser triggers end (5 questions complete or user ends early) → Next.js API r
 **6. Abandoned session cleanup**  
 Vercel Cron fires at midnight → calls Next.js cleanup API route → Prisma query finds sessions with status IN_PROGRESS and last_active_at older than 24 hours → updates status to ABANDONED
 
-**7. User resumes a session**  
+**7. Credit purchase — Phase 2**  
+User clicks "Buy credits" → Next.js API route creates Stripe Checkout Session with pack metadata → browser redirects to Stripe hosted page → user pays → Stripe fires `checkout.session.completed` webhook → Next.js webhook route verifies signature → creates `CreditPurchase` record + increments `user.creditBalance` in a Prisma transaction → user lands on success page
+
+**8. User resumes a session**  
 Browser loads Dashboard → Next.js queries Neon for IN_PROGRESS sessions → resume banner rendered → user clicks Resume → Next.js loads session, questions, and messages from Neon → Interview screen hydrates from DB state, not empty
 
 ---
@@ -123,5 +130,5 @@ When Phase 2 begins, these components are added to the live architecture:
 |---|---|
 | S3 + CloudFront | Resume PDF upload replaces plain text textarea. Files stored in S3, served via CloudFront. Lambda gains access to S3 for reading uploaded resumes. |
 | Gemini Files API | PDFs uploaded to S3 are passed to Gemini via the Files API — no custom parsing code needed |
-| Stripe | Billing layer added between User and session creation — session creation checks subscription status before proceeding |
+| Stripe | Credit-based billing added. Two new API routes: `POST /api/stripe/checkout` (creates Checkout Session) and `POST /api/stripe/webhook` (fulfills credits on payment). Session creation checks `creditBalance` before proceeding. Full spec in `docs/monetization.md`. |
 | Audio recording | Browser records audio during interview → uploaded to S3 → transcribed via Whisper API → fed to grading pipeline |
