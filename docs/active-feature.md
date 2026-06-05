@@ -8,15 +8,13 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-**#9 — Session abandonment Vercel Cron (24h → ABANDONED) (P2)**
-
-- `GET /api/cron/abandon-sessions`: protected by `CRON_SECRET` Bearer token, runs `updateMany` on `IN_PROGRESS` sessions with `lastActiveAt < now - 24h` → sets status to `ABANDONED`.
-- `vercel.json` at repo root registers the cron to run daily at midnight UTC (`0 0 * * *`).
-- `CRON_SECRET` added to env var list in CLAUDE.md.
+_(nothing in progress)_
 
 ---
 
 ## History
+
+- 2026-06-05  Session abandonment Vercel Cron (#9): `GET /api/cron/abandon-sessions` protected by `CRON_SECRET`, `updateMany` flips stale `IN_PROGRESS` → `ABANDONED`; `vercel.json` registers daily at midnight UTC  ✓
 
 - 2026-06-05  AI error handling: retry + exponential backoff (#8): `judgeAnswerWeak` wrapped in try/catch returns structured 503 after SDK retries exhausted; `generateEvaluationNote` gets `maxRetries: 2`; client error handling (toast, 5s timeout, Retry button) already in place from #4  ✓
 

@@ -207,6 +207,7 @@ All in `apps/web/.env.local`:
 
 ```
 DATABASE_URL=           # Neon connection string
+AUTH_URL=               # Base URL — http://localhost:3000 locally, https://mockmate.space in production (NextAuth v5)
 NEXTAUTH_SECRET=        # Random string for NextAuth
 GOOGLE_CLIENT_ID=       # Google OAuth
 GOOGLE_CLIENT_SECRET=   # Google OAuth
