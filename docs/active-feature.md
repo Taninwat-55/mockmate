@@ -8,19 +8,15 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-**Issue #5 — Structured grading matrix + feedback page (P0)**
-
-After a session reaches COMPLETED, generate the grading matrix from the 5 `evaluationNote` fields
-(not the message history) via `generateObject` + Zod schema. Persist as a `Feedback` row (1:1 on
-`InterviewSession`). Render `/interview/[id]/feedback`: signal badge, 3 dimension cards
-(score + strength/weakness/tip), overall summary, user rating widget. Grading is idempotent — if
-`Feedback` already exists, serve the cached row. Error handling: toast + retry on `generateObject`
-failure, session data never lost.
+_Nothing in progress — ready for the next issue._
 
 ---
 
 ## History
 
+- 2026-06-05  Structured grading matrix + feedback page (#5): `generateObject` + Zod schema from
+  5 evaluationNotes, `Feedback` row persisted, `/interview/[id]/feedback` renders signal badge +
+  3 dimension cards + rating widget, idempotent with AbortController race fix  ✓
 - 2026-06-05  Interactive multi-turn chat session (#4): streaming API route
   (`POST /api/interview/[id]`), `InterviewChat` client component, §6 loop (5 questions,
   ≤2 follow-ups, unresolved marking, hidden eval notes), DB writes before LLM call,
