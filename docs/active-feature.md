@@ -8,7 +8,13 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-_(nothing in progress)_
+- 2026-06-05  Settings page (#30): auth-guarded `/settings` with Profile (editable
+  display name via Server Action, read-only Google email + avatar), Billing (Free
+  plan, real weekly free-session usage + reset countdown, disabled "Buy credits"
+  stub — credit model per `monetization.md`, not Pro), and Danger zone
+  (type-to-confirm delete account, cascades all data). Dashboard avatar dropdown
+  (`UserMenu`) → Settings / Sign out. New Base UI primitives: avatar, card, label,
+  dialog, dropdown-menu.  _PR open — awaiting CI/merge._
 
 ---
 
