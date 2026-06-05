@@ -8,11 +8,44 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-_(nothing in progress)_
+- **SEO + GEO + marketing (#31)** — branch `feature/seo-geo`. Frontend-only.
+  - **Core SEO:** root `metadata` (metadataBase, title template, OG, Twitter,
+    canonical) in `layout.tsx`; per-page metadata on `/`, `/login`, `/about`;
+    `noindex` on `/dashboard`, `/settings`, `/interview/*`; `app/sitemap.ts`
+    (public pages only), `app/robots.ts`.
+  - **Social + icons:** code-generated `opengraph-image.tsx` (1200×630) +
+    `twitter-image`; favicon / `icon.svg` / `apple-icon` / manifest icons
+    generated from the new logo — rendered **monochrome** (white terminal `>_`
+    mark) to fit the site's all-`oklch(… 0 0)` palette. New logo adopted in nav +
+    footer; rotated-square kept only as decorative bullet/badge motif.
+  - **Structured data (JSON-LD):** WebSite, Organization, SoftwareApplication
+    (DKK offers, no faked rating), FAQPage (built from the existing `faqs` array).
+  - **GEO:** "What is MockMate" definitional block on the landing page **and** a
+    dedicated `/about` page; declarative, PRD-accurate copy.
+  - **Extras:** `public/llms.txt`, `app/manifest.ts`.
+  - **Ice's manual steps (not code):** Google Search Console domain verification
+    (DNS TXT via Vercel) + sitemap submission + Rich Results validation post-deploy.
 
 ---
 
 ## History
+
+- 2026-06-05  PDF upload + saved CV (#29): "Upload PDF" button on the interview
+  form parses the file to plain text **client-side** (pdfjs-dist, no file stored),
+  fills the resume textarea, and saves the text to `User.savedResume` via the
+  `updateSavedResume` Server Action. New sessions pre-fill the textarea from the
+  saved CV with a "Using saved CV — paste to override" hint. Text-only MVP — not
+  the S3-backed Phase-2 version. DB moved to migrate history (baselined `0_init` +
+  `add_saved_resume`). Upload hardened: 10 MB size guard, `.pdf`-extension
+  fallback for empty MIME, length-aware over-6,000-char message.  ✓
+
+- 2026-06-05  Settings page (#30): auth-guarded `/settings` with Profile (editable
+  display name via Server Action, read-only Google email + avatar), Billing (Free
+  plan, real weekly free-session usage + reset countdown, disabled "Buy credits"
+  stub — credit model per `monetization.md`, not Pro), and Danger zone
+  (type-to-confirm delete account, cascades all data). Dashboard avatar dropdown
+  (`UserMenu`) → Settings / Sign out. New Base UI primitives: avatar, card, label,
+  dialog, dropdown-menu.  ✓
 
 - 2026-06-05  PostHog analytics (#23): server-side Node SDK singleton, `session_started` on session create, `session_completed` on 5-question finish and End Early, `feedback_rated` on star rating — all fire-and-forget, no client-side snippet  ✓
 

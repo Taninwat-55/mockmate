@@ -8,9 +8,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-// Server-side auth guard for every /dashboard route. Database sessions can't be
-// verified in Edge middleware, so protection lives here where Prisma is reachable.
-export default async function DashboardLayout({
+// Server-side auth guard for /settings. Database sessions can't be verified in
+// Edge middleware, so protection lives here where Prisma is reachable (mirrors
+// the dashboard guard).
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode

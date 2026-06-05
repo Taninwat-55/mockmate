@@ -1,0 +1,16 @@
+{
+  "name": "mockmate-email-lambda",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "postgres": "^3.4.5",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.149",
+    "@types/node": "^22",
+    "typescript": "^5.8.3"
+  }
+}

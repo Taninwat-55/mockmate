@@ -1,13 +1,23 @@
+import { prisma } from "@mockmate/db"
 import { auth } from "@/auth"
-import { signOutAction } from "@/actions/auth"
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
 import { ResumeBanner } from "@/components/dashboard/ResumeBanner"
 import { SessionHistory } from "@/components/dashboard/SessionHistory"
-import { Button } from "@/components/ui/button"
+import { UserMenu } from "@/components/dashboard/UserMenu"
 
 export default async function DashboardPage() {
   const session = await auth()
   const user = session?.user
+
+  // Pre-fill the resume textarea from the user's last uploaded CV, if any.
+  const savedResume = user?.id
+    ? (
+        await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { savedResume: true },
+        })
+      )?.savedResume ?? undefined
+    : undefined
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
@@ -20,11 +30,11 @@ export default async function DashboardPage() {
             Paste a resume and a job description to start a mock interview.
           </p>
         </div>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline" size="sm">
-            Sign out
-          </Button>
-        </form>
+        <UserMenu
+          name={user?.name ?? null}
+          email={user?.email ?? null}
+          image={user?.image ?? null}
+        />
       </header>
 
       {user?.id && (
@@ -34,7 +44,7 @@ export default async function DashboardPage() {
       )}
 
       <div className="mt-6 w-full max-w-2xl">
-        <NewInterviewForm />
+        <NewInterviewForm savedResume={savedResume} />
       </div>
 
       {user?.id && (

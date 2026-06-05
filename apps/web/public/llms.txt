@@ -1,0 +1,30 @@
+# MockMate
+
+> MockMate is an AI-powered mock-interview tool that runs a realistic, multi-turn technical interview tailored to the job you're targeting, then grades you like a hiring panel.
+
+MockMate helps developers and job seekers practice technical interviews. Most people fail not because they lack knowledge, but because they freeze under pressure — and static prep (question banks, videos) can't follow up on a weak answer or push back on a vague one. MockMate simulates the real dynamic: an interviewer that asks role-specific questions, challenges shallow answers, and holds you accountable.
+
+## How it works
+
+- You paste the job description you're targeting and your résumé as plain text.
+- An AI interviewer asks five technical questions derived from that specific role.
+- It follows up to two times per question, challenging vague or incomplete answers.
+- At the end it returns a graded report across three dimensions — Technical Accuracy, Communication Clarity, and Problem-solving Approach (each scored 1–5) — plus a Strong Hire / Hire / No Hire signal and a short summary.
+
+## Who it's for
+
+Developers and career changers, typically junior to mid-level, preparing for a technical interview at a company they want to work at. The text-first format also lowers the barrier for non-native English speakers.
+
+## Key facts
+
+- Runs entirely in the browser; nothing to install. Text-first (no audio/video).
+- Questions are derived from the user's pasted job description, not a static question bank.
+- A session is exactly five main questions, with up to two follow-ups each.
+- Pricing (pay-per-session, no subscription): Free session weekly; single session 25 DKK; 5-session pack 99 DKK.
+- Sign-in is via Google.
+
+## Links
+
+- Home: https://mockmate.space/
+- About: https://mockmate.space/about
+- Sign in: https://mockmate.space/login

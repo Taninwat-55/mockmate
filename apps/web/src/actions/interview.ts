@@ -147,6 +147,7 @@ export async function startInterview(
       messages: buildInterviewMessages({
         resume: interview.resume,
         jobDescription: interview.jobDescription,
+        candidateName: session.user.name,
       }),
     })
 
