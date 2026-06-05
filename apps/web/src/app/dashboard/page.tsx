@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { signOutAction } from "@/actions/auth"
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
+import { ResumeBanner } from "@/components/dashboard/ResumeBanner"
 import { SessionHistory } from "@/components/dashboard/SessionHistory"
 import { Button } from "@/components/ui/button"
 
@@ -26,7 +27,13 @@ export default async function DashboardPage() {
         </form>
       </header>
 
-      <div className="mt-10 w-full max-w-2xl">
+      {user?.id && (
+        <div className="mt-10 w-full max-w-2xl">
+          <ResumeBanner userId={user.id} />
+        </div>
+      )}
+
+      <div className="mt-6 w-full max-w-2xl">
         <NewInterviewForm />
       </div>
 
