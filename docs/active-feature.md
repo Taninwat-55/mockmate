@@ -8,7 +8,23 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Nothing in flight — pick the next issue from the board (Ready column)._
+- **SEO + GEO + marketing (#31)** — branch `feature/seo-geo`. Frontend-only.
+  - **Core SEO:** root `metadata` (metadataBase, title template, OG, Twitter,
+    canonical) in `layout.tsx`; per-page metadata on `/`, `/login`, `/about`;
+    `noindex` on `/dashboard`, `/settings`, `/interview/*`; `app/sitemap.ts`
+    (public pages only), `app/robots.ts`.
+  - **Social + icons:** code-generated `opengraph-image.tsx` (1200×630) +
+    `twitter-image`; favicon / `icon.svg` / `apple-icon` / manifest icons
+    generated from the new logo — rendered **monochrome** (white terminal `>_`
+    mark) to fit the site's all-`oklch(… 0 0)` palette. New logo adopted in nav +
+    footer; rotated-square kept only as decorative bullet/badge motif.
+  - **Structured data (JSON-LD):** WebSite, Organization, SoftwareApplication
+    (DKK offers, no faked rating), FAQPage (built from the existing `faqs` array).
+  - **GEO:** "What is MockMate" definitional block on the landing page **and** a
+    dedicated `/about` page; declarative, PRD-accurate copy.
+  - **Extras:** `public/llms.txt`, `app/manifest.ts`.
+  - **Ice's manual steps (not code):** Google Search Console domain verification
+    (DNS TXT via Vercel) + sitemap submission + Rich Results validation post-deploy.
 
 ---
 

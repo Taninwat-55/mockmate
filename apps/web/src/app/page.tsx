@@ -2,17 +2,35 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 
 import { auth } from "@/auth"
+import { Logo } from "@/components/brand/Logo"
+import {
+  getWebSiteSchema,
+  getOrganizationSchema,
+  getSoftwareApplicationSchema,
+  getFaqPageSchema,
+} from "@/lib/structured-data"
 
 export default async function Home() {
   const session = await auth()
   if (session) redirect("/dashboard")
 
+  const jsonLd = [
+    getWebSiteSchema(),
+    getOrganizationSchema(),
+    getSoftwareApplicationSchema(),
+    getFaqPageSchema(faqs),
+  ]
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <a href="#top" className="flex items-center gap-2.5">
-            <span className="inline-block size-4 rotate-45 border-[1.5px] border-foreground" />
+            <Logo className="size-5" />
             <span className="text-[19px] font-semibold tracking-[-0.02em]">MockMate</span>
           </a>
           <div className="hidden items-center gap-8 md:flex">
@@ -117,6 +135,34 @@ export default async function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── WHAT IS MOCKMATE ─────────────────────────────────── */}
+        <section id="what" className="border-t border-border">
+          <div className="mx-auto max-w-3xl px-6 py-20 md:py-28">
+            <div className="reveal">
+              <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+                What is MockMate
+              </p>
+              <h2 className="text-balance text-[34px] font-semibold leading-[1.08] tracking-[-0.025em] sm:text-[40px]">
+                An AI interviewer for the job you actually want.
+              </h2>
+              <p className="mt-6 text-[17px] leading-relaxed text-muted-foreground">
+                MockMate is an AI-powered mock-interview tool that runs a realistic,
+                multi-turn technical interview tailored to a specific job description, then
+                grades you like a hiring panel would. You paste the job you&apos;re targeting
+                and your résumé as plain text; MockMate asks five questions — with up to two
+                follow-ups each — and challenges vague answers the way a real interviewer does.
+              </p>
+              <p className="mt-5 text-[17px] leading-relaxed text-muted-foreground">
+                When the session ends, you get a graded report across three dimensions —
+                Technical Accuracy, Communication Clarity, and Problem-solving Approach — and a
+                clear Strong&nbsp;Hire / Hire / No&nbsp;Hire signal. It runs entirely in your
+                browser, is text-first, and is built for developers and career changers
+                preparing for technical interviews.
+              </p>
             </div>
           </div>
         </section>
@@ -376,10 +422,11 @@ export default async function Home() {
       <footer className="border-t border-border bg-muted/40">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-12 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2.5">
-            <span className="inline-block size-4 rotate-45 border-[1.5px] border-foreground" />
+            <Logo className="size-[18px]" />
             <span className="text-[17px] font-semibold tracking-[-0.02em]">MockMate</span>
           </div>
           <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <Link href="/about" className="text-sm text-muted-foreground transition-colors hover:text-foreground">About</Link>
             <a href="#how" className="text-sm text-muted-foreground transition-colors hover:text-foreground">How it works</a>
             <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Pricing</a>
             <a href="#faq" className="text-sm text-muted-foreground transition-colors hover:text-foreground">FAQ</a>

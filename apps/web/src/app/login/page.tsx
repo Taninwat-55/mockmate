@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { auth } from "@/auth"
 import { signInWithGoogle } from "@/actions/auth"
 import { Button } from "@/components/ui/button"
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to MockMate with Google to start a graded AI mock interview.",
+  alternates: { canonical: "/login" },
+}
 
 export default async function LoginPage() {
   const session = await auth()
