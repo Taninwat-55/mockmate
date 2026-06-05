@@ -28,6 +28,7 @@ model User {
   emailVerified      DateTime?
   image              String?
   subscriptionStatus SubscriptionStatus @default(FREE)
+  savedResume        String?            @db.Text // last uploaded CV, plain text — pre-fills new sessions (#29)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
