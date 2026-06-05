@@ -8,17 +8,27 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
+- 2026-06-05  PDF upload + saved CV (#29): "Upload PDF" button on the interview
+  form parses the file to plain text **client-side** (pdfjs-dist, no file stored),
+  fills the resume textarea, and saves the text to `User.savedResume` via the
+  `updateSavedResume` Server Action. New sessions pre-fill the textarea from the
+  saved CV with a "Using saved CV — paste to override" hint. Text-only MVP — not
+  the S3-backed Phase-2 version. DB moves to migrate history (baselined `0_init` +
+  `add_saved_resume`). Upload hardened: 10 MB size guard, `.pdf`-extension
+  fallback for empty MIME, length-aware over-6,000-char message.
+  _PR open — awaiting CI/merge._
+
+---
+
+## History
+
 - 2026-06-05  Settings page (#30): auth-guarded `/settings` with Profile (editable
   display name via Server Action, read-only Google email + avatar), Billing (Free
   plan, real weekly free-session usage + reset countdown, disabled "Buy credits"
   stub — credit model per `monetization.md`, not Pro), and Danger zone
   (type-to-confirm delete account, cascades all data). Dashboard avatar dropdown
   (`UserMenu`) → Settings / Sign out. New Base UI primitives: avatar, card, label,
-  dialog, dropdown-menu.  _PR open — awaiting CI/merge._
-
----
-
-## History
+  dialog, dropdown-menu.  ✓
 
 - 2026-06-05  PostHog analytics (#23): server-side Node SDK singleton, `session_started` on session create, `session_completed` on 5-question finish and End Early, `feedback_rated` on star rating — all fire-and-forget, no client-side snippet  ✓
 

@@ -99,9 +99,9 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 **Error handling (Server Actions)**
 - Wrap in `try/catch`. Return a `{ success, data?, error? }` shape. Surface failures to the user via a toast, not a thrown error.
 
-**Database workflow (phased — we are in phase 1)**
-1. **Now (local prototyping):** `pnpm db:push` — fast schema iteration, no migration files while the schema is still churning and there's no real data.
-2. **Before first deploy:** switch to `pnpm db:migrate` (`migrate dev`) so schema changes become version-controlled history. Run `prisma migrate status` before committing to confirm sync.
+**Database workflow (phased — we are in phase 2 as of #29)**
+1. **Phase 1 (done — local prototyping):** `pnpm db:push` — fast schema iteration, no migration files while the schema was still churning and there was no real data.
+2. **Phase 2 (now):** `pnpm db:migrate` (`migrate dev`) — schema changes are version-controlled history. History was baselined at `0_init` (the pre-#29 schema) and the first real migration is `add_saved_resume`. Run `prisma migrate status` before committing to confirm sync.
 3. **Production:** `prisma migrate deploy` runs before the app starts.
 
 **Code quality**
@@ -220,7 +220,9 @@ CRON_SECRET=            # Secret token checked by the Vercel Cron route
 
 ## Phase 2 (Not yet built)
 
-Do not implement these unless explicitly asked: PDF resume upload (S3/CloudFront), audio recording (Whisper), Stripe billing, multiple AI personas. The `subscriptionStatus` field on `User` is a stub — no billing logic exists.
+Do not implement these unless explicitly asked: **S3/CloudFront-backed** PDF resume storage, audio recording (Whisper), Stripe billing, multiple AI personas. The `subscriptionStatus` field on `User` is a stub — no billing logic exists.
+
+> Note: a scoped-down, text-only CV upload already shipped in #29 — the PDF is parsed to plain text **client-side** and only the text is stored (`User.savedResume`), no file storage. Phase 2's PDF item refers specifically to the heavier S3/CloudFront file-storage version.
 
 ## Reference Docs
 

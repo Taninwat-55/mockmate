@@ -7,6 +7,8 @@ import { prisma } from "@mockmate/db"
 import { auth, signOut } from "@/auth"
 
 const MAX_NAME_CHARS = 60
+// Mirrors the resume cap in actions/interview.ts so a saved CV always fits a session.
+const MAX_RESUME_CHARS = 6000
 
 const displayNameSchema = z.object({
   name: z
@@ -45,6 +47,47 @@ export async function updateDisplayName(
   }
 
   revalidatePath("/settings")
+  revalidatePath("/dashboard")
+  return { success: true }
+}
+
+const savedResumeSchema = z.object({
+  resume: z
+    .string()
+    .trim()
+    .min(1, "Couldn't read any text from that PDF.")
+    .max(
+      MAX_RESUME_CHARS,
+      `Resume must be ${MAX_RESUME_CHARS.toLocaleString("en-US")} characters or fewer.`,
+    ),
+})
+
+export type SaveResumeInput = z.infer<typeof savedResumeSchema>
+
+// Persists the resume text extracted from an uploaded PDF (client-side parse) so
+// it pre-fills future interview sessions. No file is stored — text only.
+export async function updateSavedResume(
+  input: SaveResumeInput
+): Promise<ActionResult> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: "You need to be signed in to do that." }
+  }
+
+  const parsed = savedResumeSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { savedResume: parsed.data.resume },
+    })
+  } catch {
+    return { success: false, error: "Couldn't save your CV. Please try again." }
+  }
+
   revalidatePath("/dashboard")
   return { success: true }
 }
