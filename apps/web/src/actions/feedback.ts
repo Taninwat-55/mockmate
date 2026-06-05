@@ -3,6 +3,7 @@
 import { z } from "zod"
 import { prisma } from "@mockmate/db"
 import { auth } from "@/auth"
+import { posthog } from "@/lib/posthog"
 
 const ratingSchema = z.number().int().min(1).max(5)
 
@@ -33,8 +34,21 @@ export async function submitFeedbackRating(
       where: { interviewSessionId: sessionId },
       data: { userRating: parsed.data },
     })
-    return { success: true }
   } catch {
     return { success: false, error: "Failed to save rating" }
   }
+
+  try {
+    posthog.capture({
+      distinctId: session.user.id,
+      event: "feedback_rated",
+      properties: {
+        session_id: sessionId,
+        user_id: session.user.id,
+        rating: parsed.data,
+      },
+    })
+  } catch {}
+
+  return { success: true }
 }

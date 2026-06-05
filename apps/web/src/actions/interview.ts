@@ -13,6 +13,7 @@ import {
 import { auth } from "@/auth"
 import { interviewModel } from "@/lib/ai"
 import { buildInterviewMessages } from "@/lib/interviewer-prompt"
+import { posthog } from "@/lib/posthog"
 
 // Server-side input caps (PRD §6). Resume and JD are each limited to 6,000 chars
 // to control token cost; the title is a short user-facing label.
@@ -78,6 +79,18 @@ export async function createInterviewSession(
       error: "Couldn't start the interview. Please try again.",
     }
   }
+
+  try {
+    posthog.capture({
+      distinctId: session.user.id,
+      event: "session_started",
+      properties: {
+        session_id: interview.id,
+        user_id: session.user.id,
+        role_title: parsed.data.title,
+      },
+    })
+  } catch {}
 
   // redirect throws internally, so it must run outside the try/catch above.
   redirect(`/interview/${interview.id}`)
@@ -181,7 +194,13 @@ export async function endInterviewEarly(
     return { success: false, error: "You need to be signed in." }
   }
 
+  let questionCount: number | undefined
   try {
+    const existing = await prisma.interviewSession.findFirst({
+      where: { id: sessionId, userId: session.user.id, status: InterviewSessionStatus.IN_PROGRESS },
+      select: { mainQuestionCount: true },
+    })
+    questionCount = existing?.mainQuestionCount
     await prisma.interviewSession.updateMany({
       where: {
         id: sessionId,
@@ -190,8 +209,23 @@ export async function endInterviewEarly(
       },
       data: { status: InterviewSessionStatus.COMPLETED, lastActiveAt: new Date() },
     })
-    return { success: true }
   } catch {
     return { success: false, error: "Couldn't end the interview. Please try again." }
   }
+
+  if (questionCount !== undefined) {
+    try {
+      posthog.capture({
+        distinctId: session.user.id,
+        event: "session_completed",
+        properties: {
+          session_id: sessionId,
+          user_id: session.user.id,
+          question_count: questionCount,
+        },
+      })
+    } catch {}
+  }
+
+  return { success: true }
 }
