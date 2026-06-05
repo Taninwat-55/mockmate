@@ -8,15 +8,17 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-**#8 — AI error handling: retry + exponential backoff (P1)**
+**#9 — Session abandonment Vercel Cron (24h → ABANDONED) (P2)**
 
-- Server: `judgeAnswerWeak` wrapped in try/catch — returns structured 503 JSON after SDK retries exhausted; `streamText` already uses `maxRetries: 2` (SDK handles backoff).
-- Server: `generateEvaluationNote` gets `maxRetries: 2` to prevent silent evaluation-note loss inside `onFinish`.
-- Client: all requirements already implemented in #4 — `onError` toast, 5s timeout, Retry button → `regenerate()`, input stays enabled.
+- `GET /api/cron/abandon-sessions`: protected by `CRON_SECRET` Bearer token, runs `updateMany` on `IN_PROGRESS` sessions with `lastActiveAt < now - 24h` → sets status to `ABANDONED`.
+- `vercel.json` at repo root registers the cron to run daily at midnight UTC (`0 0 * * *`).
+- `CRON_SECRET` added to env var list in CLAUDE.md.
 
 ---
 
 ## History
+
+- 2026-06-05  AI error handling: retry + exponential backoff (#8): `judgeAnswerWeak` wrapped in try/catch returns structured 503 after SDK retries exhausted; `generateEvaluationNote` gets `maxRetries: 2`; client error handling (toast, 5s timeout, Retry button) already in place from #4  ✓
 
 - 2026-06-05  Session persistence + resume-unfinished banner (#7): `ResumeBanner` async Server Component queries most-recent IN_PROGRESS session by `lastActiveAt` desc, renders amber callout above the form with "Resume interview →" link, returns null when clean  ✓
 

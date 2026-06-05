@@ -214,6 +214,7 @@ GOOGLE_GENERATIVE_AI_API_KEY=  # Gemini API
 POSTHOG_KEY=            # PostHog project key
 RESEND_API_KEY=         # Resend email (used in Lambda)
 AWS_LAMBDA_FUNCTION_NAME=      # Lambda function to invoke on session complete
+CRON_SECRET=            # Secret token checked by the Vercel Cron route
 ```
 
 ## Phase 2 (Not yet built)
