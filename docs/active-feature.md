@@ -8,7 +8,15 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-_Nothing in progress — ready for the next issue._
+**#7 — Session persistence + resume-unfinished banner (P1)**
+
+Scope: detect any `IN_PROGRESS` session on dashboard load and display a prominent resume banner above the new-interview form, linking back to `/interview/[id]`. Shows only the most recently active session (`lastActiveAt` desc). No banner when there are no IN_PROGRESS sessions.
+
+Acceptance criteria:
+- Banner appears on next dashboard visit if a session is IN_PROGRESS
+- Banner links to `/interview/[id]` (rehydration already works)
+- No banner shown when there are no IN_PROGRESS sessions
+- `pnpm build` passes; verified in browser
 
 ---
 
