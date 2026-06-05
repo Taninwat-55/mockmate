@@ -40,8 +40,11 @@ export default async function InterviewPage({
   })
   if (!interview) notFound()
 
+  if (interview.status === InterviewSessionStatus.COMPLETED) {
+    redirect(`/interview/${id}/feedback`)
+  }
+
   if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
-    const ended = interview.status === InterviewSessionStatus.COMPLETED
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
         <div className="space-y-2">
@@ -50,9 +53,7 @@ export default async function InterviewPage({
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">{interview.title}</h1>
           <p className="max-w-md text-sm text-muted-foreground">
-            {ended
-              ? "Interview complete. Your graded feedback arrives in the next update."
-              : "This interview is no longer active."}
+            This interview is no longer active.
           </p>
         </div>
         <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
