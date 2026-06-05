@@ -8,6 +8,10 @@ node_modules/
 out/
 build/
 
+# Lambda build artifacts
+lambda/dist/
+lambda/function.zip
+
 # Turborepo
 .turbo/
 

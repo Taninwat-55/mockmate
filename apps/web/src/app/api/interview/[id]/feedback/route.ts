@@ -1,6 +1,7 @@
 import { Prisma, prisma, InterviewSessionStatus } from "@mockmate/db"
 import { auth } from "@/auth"
 import { generateFeedback } from "@/lib/generate-feedback"
+import { invokeEmailLambda } from "@/lib/invoke-email-lambda"
 import type { EvaluationNote } from "@/types/interview"
 
 export const maxDuration = 60
@@ -63,6 +64,7 @@ export async function POST(
     const feedback = await prisma.feedback.create({
       data: { interviewSessionId: id, ...result },
     })
+    void invokeEmailLambda(id)
     return Response.json({ feedback, cached: false })
   } catch (err) {
     // P2002: unique constraint — a concurrent request already created the row.
