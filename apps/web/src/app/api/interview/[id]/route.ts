@@ -21,6 +21,7 @@ import {
 } from "@/lib/interview-engine"
 import { generateEvaluationNote } from "@/lib/evaluate-answer"
 import { judgeAnswerWeak } from "@/lib/judge-answer"
+import { posthog } from "@/lib/posthog"
 import type { InterviewTurn } from "@/types/interview"
 import type { InterviewUIMessage } from "@/types/interview-chat"
 
@@ -273,6 +274,17 @@ export async function POST(
             },
           }),
         ])
+        try {
+          posthog.capture({
+            distinctId: session.user.id,
+            event: "session_completed",
+            properties: {
+              session_id: id,
+              user_id: session.user.id,
+              question_count: interview.mainQuestionCount,
+            },
+          })
+        } catch {}
         return
       }
 

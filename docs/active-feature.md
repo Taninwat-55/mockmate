@@ -14,6 +14,10 @@ _(nothing in progress)_
 
 ## History
 
+- 2026-06-05  PostHog analytics (#23): server-side Node SDK singleton, `session_started` on session create, `session_completed` on 5-question finish and End Early, `feedback_rated` on star rating — all fire-and-forget, no client-side snippet  ✓
+
+- 2026-06-05  Landing page — hero, how-it-works, why-it-works, sample report, pricing (credit model), FAQ (#22) ✓
+
 - 2026-06-05  Session abandonment Vercel Cron (#9): `GET /api/cron/abandon-sessions` protected by `CRON_SECRET`, `updateMany` flips stale `IN_PROGRESS` → `ABANDONED`; `vercel.json` registers daily at midnight UTC  ✓
 
 - 2026-06-05  AI error handling: retry + exponential backoff (#8): `judgeAnswerWeak` wrapped in try/catch returns structured 503 after SDK retries exhausted; `generateEvaluationNote` gets `maxRetries: 2`; client error handling (toast, 5s timeout, Retry button) already in place from #4  ✓
