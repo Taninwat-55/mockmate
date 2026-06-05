@@ -170,34 +170,49 @@ export async function POST(
   }
 
   // Combine the deterministic length check with the model's semantic verdict, then
-  // pick the next move from the §6 state machine.
-  const llmJudgedWeak = await judgeAnswerWeak({
-    questionText: current.questionText,
-    conversation: currentTurns,
-  })
-  const { isWeak } = assessAnswer(answerText, llmJudgedWeak)
-  const action = determineNextAction({
-    mainQuestionCount: interview.mainQuestionCount,
-    followupCount: current.followupCount,
-    answerIsWeak: isWeak,
-  })
-
+  // pick the next move from the §6 state machine. If the judge call exhausts its SDK
+  // retries (429/5xx), return a structured error so the client can surface a retry
+  // affordance — the answer is already in DB, so no input is lost.
+  let isWeak: boolean
+  let action: ReturnType<typeof determineNextAction>
   let directive: string
-  if (action === "ASK_FOLLOWUP") {
-    directive =
-      current.followupCount === 0
-        ? "The candidate's answer was weak — vague, too short, or missing relevant technical substance. Ask one pointed follow-up that makes them be specific or explain their reasoning. Do not give them the answer."
-        : "The candidate's answer is still weak after one follow-up. Ask one final follow-up; you may add a light hint or nudge to avoid a dead end. Do not follow up again after this."
-  } else if (action === "END_SESSION") {
-    directive =
-      "This was the final main question of the interview. Give one short closing line to wrap up. Do not ask any further question."
-  } else {
-    directive =
-      "Move on to your next main question now. Choose it from the candidate's resume and the target role, and ask exactly one question."
-  }
+  let sessionStatus: "IN_PROGRESS" | "COMPLETED"
 
-  const sessionStatus: "IN_PROGRESS" | "COMPLETED" =
-    action === "END_SESSION" ? "COMPLETED" : "IN_PROGRESS"
+  try {
+    const llmJudgedWeak = await judgeAnswerWeak({
+      questionText: current.questionText,
+      conversation: currentTurns,
+    })
+    ;({ isWeak } = assessAnswer(answerText, llmJudgedWeak))
+    action = determineNextAction({
+      mainQuestionCount: interview.mainQuestionCount,
+      followupCount: current.followupCount,
+      answerIsWeak: isWeak,
+    })
+
+    if (action === "ASK_FOLLOWUP") {
+      directive =
+        current.followupCount === 0
+          ? "The candidate's answer was weak — vague, too short, or missing relevant technical substance. Ask one pointed follow-up that makes them be specific or explain their reasoning. Do not give them the answer."
+          : "The candidate's answer is still weak after one follow-up. Ask one final follow-up; you may add a light hint or nudge to avoid a dead end. Do not follow up again after this."
+    } else if (action === "END_SESSION") {
+      directive =
+        "This was the final main question of the interview. Give one short closing line to wrap up. Do not ask any further question."
+    } else {
+      directive =
+        "Move on to your next main question now. Choose it from the candidate's resume and the target role, and ask exactly one question."
+    }
+
+    sessionStatus = action === "END_SESSION" ? "COMPLETED" : "IN_PROGRESS"
+  } catch {
+    return Response.json(
+      {
+        error:
+          "Service temporarily unavailable. Your answer is saved — please retry.",
+      },
+      { status: 503 },
+    )
+  }
 
   const result = streamText({
     model: interviewModel,
