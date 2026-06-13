@@ -9,15 +9,25 @@ export default async function DashboardPage() {
   const session = await auth()
   const user = session?.user
 
-  // Pre-fill the resume textarea from the user's last uploaded CV, if any.
-  const savedResume = user?.id
-    ? (
-        await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { savedResume: true },
-        })
-      )?.savedResume ?? undefined
-    : undefined
+  // Pre-fill the resume textarea from the user's last uploaded CV, and read the
+  // billing entitlement so the form can offer free vs. credit (#16).
+  const userRecord = user?.id
+    ? await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          savedResume: true,
+          creditBalance: true,
+          freeSessionRefreshAt: true,
+          isOwner: true,
+        },
+      })
+    : null
+  const savedResume = userRecord?.savedResume ?? undefined
+  const credits = userRecord?.creditBalance ?? 0
+  const isOwner = userRecord?.isOwner ?? false
+  const freeAvailable = userRecord
+    ? new Date() >= userRecord.freeSessionRefreshAt
+    : false
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
@@ -44,7 +54,12 @@ export default async function DashboardPage() {
       )}
 
       <div className="mt-6 w-full max-w-2xl">
-        <NewInterviewForm savedResume={savedResume} />
+        <NewInterviewForm
+          savedResume={savedResume}
+          credits={credits}
+          freeAvailable={freeAvailable}
+          isOwner={isOwner}
+        />
       </div>
 
       {user?.id && (

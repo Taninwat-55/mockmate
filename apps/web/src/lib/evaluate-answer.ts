@@ -1,6 +1,6 @@
 import { generateObject } from "ai"
 
-import { interviewModel } from "@/lib/ai"
+import { gradingModel } from "@/lib/ai"
 import { evaluationNoteSchema, type EvaluationNote } from "@/types/interview"
 import type { InterviewTurn } from "@/types/interview"
 
@@ -21,9 +21,11 @@ const EVALUATION_SYSTEM_PROMPT = `You are scoring one question from a technical 
 export async function generateEvaluationNote({
   questionText,
   conversation,
+  isPaid,
 }: {
   questionText: string
   conversation: InterviewTurn[]
+  isPaid: boolean
 }): Promise<EvaluationNote> {
   const transcript = conversation
     .map(
@@ -33,7 +35,7 @@ export async function generateEvaluationNote({
     .join("\n\n")
 
   const { object } = await generateObject({
-    model: interviewModel,
+    model: gradingModel(isPaid),
     schema: evaluationNoteSchema,
     maxRetries: 2,
     system: EVALUATION_SYSTEM_PROMPT,

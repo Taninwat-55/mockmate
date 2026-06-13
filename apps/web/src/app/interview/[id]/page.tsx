@@ -27,6 +27,7 @@ export default async function InterviewPage({
       id: true,
       title: true,
       status: true,
+      isPaid: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
@@ -73,8 +74,22 @@ export default async function InterviewPage({
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="border-b border-border px-4 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <h1 className="text-sm font-medium tracking-tight">{interview.title}</h1>
+        <span
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+            interview.isPaid
+              ? "bg-foreground text-background"
+              : "bg-muted text-muted-foreground"
+          }`}
+          title={
+            interview.isPaid
+              ? "Pro session — stronger models"
+              : "Free session — base model"
+          }
+        >
+          {interview.isPaid ? "Pro" : "Free"}
+        </span>
       </header>
       <InterviewChat sessionId={interview.id} initialMessages={initialMessages} />
     </main>

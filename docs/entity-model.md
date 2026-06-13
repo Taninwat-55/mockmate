@@ -206,8 +206,8 @@ The AI generates one evaluation note per main question. Attaching it to the Ques
 **Why Feedback is separate from Session**  
 Session tracks the process. Feedback is the output. They have different lifecycles: Session is created at the start, Feedback is created at the end. Separating them keeps each table focused and makes it easy to query sessions without loading the full grading matrix.
 
-**subscriptionStatus on User is a Phase 2 stub**  
-The field exists so the Stripe integration in Phase 2 has a column to write to. For MVP, every user is `FREE`. No billing logic is implemented.
+**subscriptionStatus on User is a Phase 2 stub — slated for removal**  
+The field exists so the Stripe integration in Phase 2 has a column to write to. For MVP, every user is `FREE`. **Update (2026-06-13):** Phase 2 went with a pay-per-use credit model, not subscriptions — this field and the `SubscriptionStatus` enum will be **removed** in the billing migration (replaced by `creditBalance` + the weekly free reset). See `docs/monetization.md`. No billing logic is implemented yet.
 
 **title on Session surfaces from wireframe review**  
 The wireframe design review (Phase 3) revealed that session cards on the Dashboard need a human-readable label. The raw `jobDescription` text is too long to display on a card. `title` is a short, user-provided string filled in on the New Session form — added to the entity model during Phase 3 as a result of the design review.

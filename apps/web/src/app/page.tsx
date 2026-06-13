@@ -317,7 +317,7 @@ export default async function Home() {
                 </div>
                 <p className="mt-2 text-[14px] text-muted-foreground">Try it first. No card required.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["1 free session per week", "Full graded feedback report", "Up to 2 follow-ups per question", "Last 3 sessions in history"].map((f) => (
+                  {["1 free session per week", "Base AI model (Flash)", "Full graded feedback report", "Up to 2 follow-ups per question", "Last 3 sessions in history"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}
@@ -333,12 +333,12 @@ export default async function Home() {
               <div className="flex flex-col rounded-xl border border-border bg-background p-7">
                 <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-faint">Single session</p>
                 <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="text-[40px] font-semibold tracking-[-0.03em]">25 DKK</span>
-                  <span className="font-mono text-[13px] text-faint">~$3.50</span>
+                  <span className="text-[40px] font-semibold tracking-[-0.03em]">19 DKK</span>
+                  <span className="font-mono text-[13px] text-faint">~$2.70</span>
                 </div>
                 <p className="mt-2 text-[14px] text-muted-foreground">Before an interview. One credit.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["1 interview session", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you"].map((f) => (
+                  {["Pro AI models — sharper interviewer & grading", "1 interview session", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}
@@ -357,12 +357,12 @@ export default async function Home() {
                 </span>
                 <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">5-session pack</p>
                 <div className="mt-4 flex items-baseline gap-1.5">
-                  <span className="text-[40px] font-semibold tracking-[-0.03em]">99 DKK</span>
-                  <span className="font-mono text-[13px] text-faint">~$14</span>
+                  <span className="text-[40px] font-semibold tracking-[-0.03em]">79 DKK</span>
+                  <span className="font-mono text-[13px] text-faint">~$11</span>
                 </div>
-                <p className="mt-2 text-[14px] text-muted-foreground">During a job search. Save ~20%.</p>
+                <p className="mt-2 text-[14px] text-muted-foreground">During a job search. Save ~17%.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["5 interview sessions", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you", "Full session history", "~20 DKK per session"].map((f) => (
+                  {["Pro AI models — sharper interviewer & grading", "5 interview sessions", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you", "Full session history", "~16 DKK per session"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}

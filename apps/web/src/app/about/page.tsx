@@ -101,7 +101,7 @@ export default function AboutPage() {
           <h2 className="text-[26px] font-semibold tracking-[-0.02em]">What it costs</h2>
           <p className="mt-6 text-[16.5px] leading-relaxed text-muted-foreground">
             MockMate is pay-per-session, with no subscription. There&apos;s a free session
-            every week, a single session for 25&nbsp;DKK, or a 5-session pack for 99&nbsp;DKK.
+            every week, a single session for 19&nbsp;DKK, or a 5-session pack for 79&nbsp;DKK.
             It runs entirely in your browser — there&apos;s nothing to install.
           </p>
         </section>
