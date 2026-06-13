@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
-import { CREDIT_PACKS, stripe } from "@/lib/stripe"
+import { CREDIT_PACKS, getStripe } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const checkout = await stripe.checkout.sessions.create({
+    const checkout = await getStripe().checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/buy/success?session_id={CHECKOUT_SESSION_ID}`,

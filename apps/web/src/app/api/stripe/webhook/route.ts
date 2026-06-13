@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 
 import { prisma } from "@mockmate/db"
-import { stripe } from "@/lib/stripe"
+import { getStripe } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, secret)
+    event = getStripe().webhooks.constructEvent(rawBody, signature, secret)
   } catch {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 })
   }

@@ -1,10 +1,21 @@
 import Stripe from "stripe"
 
-// Single Stripe client for the app. One-time payments only — no subscriptions
-// (see docs/monetization.md). The secret key is read from the environment;
-// API calls fail at runtime if it's missing, which is the desired behaviour in
-// any environment where billing is actually exercised.
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "")
+// Lazily-constructed Stripe client. One-time payments only — no subscriptions
+// (see docs/monetization.md). Constructing at module load would throw
+// ("Neither apiKey nor config.authenticator provided") during any build where
+// STRIPE_SECRET_KEY isn't present — e.g. CI — because Next evaluates the route
+// modules to collect page data. Deferring construction to first use means the
+// key is only required at request time, where it always exists.
+let client: Stripe | null = null
+
+export function getStripe(): Stripe {
+  if (!client) {
+    const apiKey = process.env.STRIPE_SECRET_KEY
+    if (!apiKey) throw new Error("STRIPE_SECRET_KEY is not set")
+    client = new Stripe(apiKey)
+  }
+  return client
+}
 
 // The two purchasable credit packs. Each maps to a Stripe Price ID and the
 // number of credits granted when its payment completes. Defined once here so the
