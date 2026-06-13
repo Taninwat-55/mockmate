@@ -212,7 +212,7 @@ model CreditPurchase {
   userId           String
   stripeSessionId  String   @unique // Stripe Checkout session id — idempotency guard against duplicate webhook delivery
   creditsPurchased Int
-  amountPaid       Int      // smallest currency unit (2900 = 29.00 DKK)
+  amountPaid       Int      // smallest currency unit (1900 = 19.00 DKK)
   currency         String   @default("dkk")
   createdAt        DateTime @default(now())
 

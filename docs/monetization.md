@@ -3,7 +3,7 @@
 **Project:** MockMate  
 **Phase:** 2 — Post-MVP  
 **Author:** Taninwat Kaewpankan (Ice)  
-**Last Updated:** 2026-06-13 (revised: Pro models as the paid perk, tiered model matrix, price bump 25→29 DKK, subscriptionStatus removed, credit refund on abandonment)  
+**Last Updated:** 2026-06-13 (revised: Pro models as the paid perk, tiered model matrix, pricing set to 19/79 DKK, subscriptionStatus removed, credit refund on abandonment)  
 **Status:** Planned — not yet implemented
 
 ---
@@ -23,8 +23,8 @@ This model suits the job-seeker use case: users burst-use the product during an 
 | Tier | Price (DKK) | Price (USD approx.) | Credits | Perks |
 |---|---|---|---|---|
 | Free | 0 DKK | — | 1 / week | Base model (2.5 Flash), web report only, last 3 sessions in history |
-| Single session | 29 DKK | ~$4.10 | 1 | **Pro models** (see matrix) + email feedback report |
-| 5-session pack | 115 DKK | ~$16 | 5 | **Pro models** + email feedback report, full session history |
+| Single session | 19 DKK | ~$2.70 | 1 | **Pro models** (see matrix) + email feedback report |
+| 5-session pack | 79 DKK | ~$11 | 5 | **Pro models** + email feedback report, full session history |
 
 **Free tier:** Users get 1 free session every 7 days, no card required. The cadence is long enough that it doesn't compete with the 25 DKK single session — active job seekers applying to multiple roles will want more than one session per week and will pay. Free users can see only their last 3 sessions in the dashboard history.
 
@@ -34,9 +34,10 @@ This model suits the job-seeker use case: users burst-use the product during an 
 
 ### Why these numbers
 
-- 29 DKK is still below the "coffee" psychological threshold (~$4.10). Nobody thinks twice.
-- 115 DKK for 5 = 23 DKK per session (~$3.24), saving ~21% vs buying individually (115 vs 145 DKK). Keeping the single at 29 but the pack at the old 99 would have ballooned the discount to ~32% and undercut single-session revenue — 115 holds the intended ~20% off.
-- Paid sessions cost more to serve now (stronger models — see §8), but only paid sessions do, so revenue scales with cost. Both prices still comfortably cover infrastructure at low volume.
+- 19 DKK (~$2.70) is "nothing" money — well under any hesitation threshold, which matters more than margin since the goal is adoption, not profit.
+- 79 DKK for 5 = ~16 DKK per session (~$2.20), saving ~17% vs buying individually (79 vs 5×19 = 95 DKK).
+- VAT: in Denmark, VAT registration is only required above 50,000 DKK/year revenue — below that the displayed price is effectively all yours (minus Stripe). Revisit once revenue approaches that threshold.
+- Paid sessions cost more to serve (stronger models — see §8), but only paid sessions do, and 19 DKK still covers a paid session's AI cost many times over.
 
 ### Model matrix
 
@@ -171,7 +172,7 @@ model CreditPurchase {
   user             User     @relation(fields: [userId], references: [id])
   stripeSessionId  String   @unique
   creditsPurchased Int
-  amountPaid       Int      // in øre — smallest currency unit (2500 = 25.00 DKK)
+  amountPaid       Int      // in øre — smallest currency unit (1900 = 19.00 DKK)
   currency         String   @default("dkk")
   createdAt        DateTime @default(now())
 }
@@ -189,8 +190,8 @@ The billing UI lives in the existing **`/settings`** page (built in #30, current
 
 - Credit balance — large and prominent
 - "1 free session available" banner — shown only when the weekly free is eligible (`now() > freeSessionRefreshAt`); otherwise show the reset countdown ("next free session in 3 days")
-- "Buy 1 session — 29 DKK" button
-- "Buy 5 sessions — 115 DKK" button (shows the per-session saving)
+- "Buy 1 session — 19 DKK" button
+- "Buy 5 sessions — 79 DKK" button (shows the per-session saving)
 
 ### What you get when you pay (transparency)
 
@@ -219,7 +220,7 @@ No Stripe Customer Portal needed — there are no subscriptions to manage. This 
 When this feature is picked up, implement in this order:
 
 1. Schema migration — **remove** `subscriptionStatus` + the `SubscriptionStatus` enum; add `creditBalance`, `freeSessionRefreshAt` to `User`; add `isPaid` to `InterviewSession`; add `CreditPurchase` model
-2. Create Stripe products and price IDs in the Stripe Dashboard (29 DKK single, 115 DKK 5-pack)
+2. Create Stripe products and price IDs in the Stripe Dashboard (19 DKK single, 79 DKK 5-pack)
 3. Add env vars to `.env.local` and Vercel project settings
 4. `POST /api/stripe/checkout` — checkout session creation
 5. `POST /api/stripe/webhook` — event handling and credit fulfillment
@@ -236,7 +237,7 @@ When this feature is picked up, implement in this order:
 
 ## 8. Cost Sanity Check
 
-Free sessions run entirely on 2.5 Flash (~$0.004/session). Paid sessions use 3.5 Flash for the live flow plus 2.5 Pro for grading — estimated at roughly **$0.02–0.05/session**, an order of magnitude higher, but a 29 DKK (~$4.10) price covers it ~80–200×. Exact figures to confirm against current Gemini pricing at implementation.
+Free sessions run entirely on 2.5 Flash (~$0.004/session). Paid sessions use 3.5 Flash for the live flow plus 2.5 Pro for grading — estimated at roughly **$0.10–0.30/session** (3.5 Flash output is the priciest model at $16.20/1M, but only on paid sessions). A 19 DKK (~$2.70) price still covers a paid session's AI cost ~10×. Exact figures to confirm against current Gemini pricing.
 
 At low scale (100 sessions/month, mixed free/paid):
 
@@ -248,6 +249,6 @@ At low scale (100 sessions/month, mixed free/paid):
 | Domain | ~$1.25 |
 | **Total** | **~$2–4/month** |
 
-Revenue from 10 paying users (single sessions): 10 × 29 DKK = **290 DKK (~$41)**
+Revenue from 10 paying users (single sessions): 10 × 19 DKK = **190 DKK (~$27)**
 
 Even if 90% of users never pay, the model sustains itself with a handful of paying users per month.

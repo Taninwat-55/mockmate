@@ -43,7 +43,7 @@ export default function BuyPage() {
               <CardTitle>Single session</CardTitle>
               <CardDescription>
                 <span className="text-2xl font-semibold text-foreground">
-                  29 DKK
+                  19 DKK
                 </span>{" "}
                 · 1 credit
               </CardDescription>
@@ -57,7 +57,7 @@ export default function BuyPage() {
                   </li>
                 ))}
               </ul>
-              <BuyButton pack="single">Buy 1 session — 29 DKK</BuyButton>
+              <BuyButton pack="single">Buy 1 session — 19 DKK</BuyButton>
             </CardContent>
           </Card>
 
@@ -66,15 +66,15 @@ export default function BuyPage() {
               <CardTitle>5-session pack</CardTitle>
               <CardDescription>
                 <span className="text-2xl font-semibold text-foreground">
-                  115 DKK
+                  79 DKK
                 </span>{" "}
-                · 5 credits · save ~20%
+                · 5 credits · save ~17%
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  <Check className="mt-0.5 size-4 text-foreground" />~23 DKK per
+                  <Check className="mt-0.5 size-4 text-foreground" />~16 DKK per
                   session
                 </li>
                 {PACK_PERKS.map((perk) => (
@@ -84,7 +84,7 @@ export default function BuyPage() {
                   </li>
                 ))}
               </ul>
-              <BuyButton pack="five">Buy 5 sessions — 115 DKK</BuyButton>
+              <BuyButton pack="five">Buy 5 sessions — 79 DKK</BuyButton>
             </CardContent>
           </Card>
         </div>
