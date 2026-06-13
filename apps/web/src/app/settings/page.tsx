@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react"
 import { prisma } from "@mockmate/db"
 import { auth } from "@/auth"
 import { getWeeklyUsage } from "@/lib/usage"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -27,6 +27,7 @@ export default async function SettingsPage() {
       name: true,
       email: true,
       image: true,
+      creditBalance: true,
     },
   })
   if (!user) notFound()
@@ -69,20 +70,24 @@ export default async function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Billing</CardTitle>
-            <CardDescription>Your plan, usage, and credits.</CardDescription>
+            <CardDescription>
+              Your credits and weekly free session.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium">Free plan</p>
+                <p className="text-sm font-medium tabular-nums">
+                  {user.creditBalance}{" "}
+                  {user.creditBalance === 1 ? "credit" : "credits"}
+                </p>
                 <p className="text-sm text-muted-foreground">
-                  1 interview session per week — buy credits for more.
+                  1 credit = 1 Pro interview. No subscription.
                 </p>
               </div>
-              {/* Stub: pay-per-session credits land with Stripe in #16. */}
-              <Button disabled title="Coming soon">
+              <Link href="/buy" className={buttonVariants()}>
                 Buy credits
-              </Button>
+              </Link>
             </div>
 
             <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
@@ -94,7 +99,7 @@ export default async function SettingsPage() {
               </p>
               <p className="text-muted-foreground">
                 {usage.resetsInDays === null
-                  ? "Your weekly session is available now."
+                  ? "Your weekly free session is available now."
                   : usage.resetsInDays === 0
                     ? "Resets later today."
                     : `Resets in ${usage.resetsInDays} ${
@@ -104,8 +109,9 @@ export default async function SettingsPage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Paid credits coming soon — a single session is 25&nbsp;DKK, or get a
-              5-session pack for 99&nbsp;DKK.
+              Credits unlock the Pro models (sharper interviewer and grading), the
+              full feedback report by email, and full session history. A single
+              session is 19&nbsp;DKK, or a 5-session pack for 79&nbsp;DKK.
             </p>
           </CardContent>
         </Card>

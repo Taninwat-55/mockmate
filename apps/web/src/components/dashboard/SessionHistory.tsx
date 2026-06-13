@@ -19,10 +19,21 @@ const STATUS_CLASS: Record<InterviewSessionStatus, string> = {
     "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
 }
 
+// Free users see only their most recent sessions; anyone who has ever bought
+// credits keeps full history (#16).
+const FREE_HISTORY_LIMIT = 3
+
 export async function SessionHistory({ userId }: SessionHistoryProps) {
+  const [hasPaidHistory, total] = await Promise.all([
+    prisma.creditPurchase.count({ where: { userId } }).then((n) => n > 0),
+    prisma.interviewSession.count({ where: { userId } }),
+  ])
+  const capped = !hasPaidHistory && total > FREE_HISTORY_LIMIT
+
   const sessions = await prisma.interviewSession.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
+    take: hasPaidHistory ? undefined : FREE_HISTORY_LIMIT,
     select: { id: true, title: true, status: true, createdAt: true },
   })
 
@@ -35,8 +46,9 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
   }
 
   return (
-    <ul className="flex flex-col gap-2">
-      {sessions.map((session) => {
+    <>
+      <ul className="flex flex-col gap-2">
+        {sessions.map((session) => {
         const date = session.createdAt.toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
@@ -71,7 +83,17 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
             )}
           </li>
         )
-      })}
-    </ul>
+        })}
+      </ul>
+      {capped && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Showing your {FREE_HISTORY_LIMIT} most recent.{" "}
+          <Link href="/buy" className="underline">
+            Buy credits
+          </Link>{" "}
+          to keep your full history.
+        </p>
+      )}
+    </>
   )
 }
