@@ -22,7 +22,7 @@ export async function POST(
 
   const interview = await prisma.interviewSession.findFirst({
     where: { id, userId: session.user.id },
-    select: { status: true },
+    select: { status: true, isPaid: true },
   })
 
   if (!interview) {
@@ -55,7 +55,7 @@ export async function POST(
 
   let result: Awaited<ReturnType<typeof generateFeedback>>
   try {
-    result = await generateFeedback(notes)
+    result = await generateFeedback(notes, interview.isPaid)
   } catch {
     return Response.json({ error: "Failed to generate feedback" }, { status: 500 })
   }
@@ -64,7 +64,9 @@ export async function POST(
     const feedback = await prisma.feedback.create({
       data: { interviewSessionId: id, ...result },
     })
-    void invokeEmailLambda(id)
+    // Email summary is a paid-session perk (#16) — free sessions get the web
+    // report only.
+    if (interview.isPaid) void invokeEmailLambda(id)
     return Response.json({ feedback, cached: false })
   } catch (err) {
     // P2002: unique constraint — a concurrent request already created the row.

@@ -1,7 +1,7 @@
 import { generateObject } from "ai"
 import { z } from "zod"
 
-import { interviewModel } from "@/lib/ai"
+import { chatModel } from "@/lib/ai"
 import type { InterviewTurn } from "@/types/interview"
 
 // Per-answer weakness verdict (PRD §6 "vague, or fails to mention any technical
@@ -27,9 +27,11 @@ const judgeSchema = z.object({
 export async function judgeAnswerWeak({
   questionText,
   conversation,
+  isPaid,
 }: {
   questionText: string
   conversation: InterviewTurn[]
+  isPaid: boolean
 }): Promise<boolean> {
   const transcript = conversation
     .map(
@@ -39,7 +41,7 @@ export async function judgeAnswerWeak({
     .join("\n\n")
 
   const { object } = await generateObject({
-    model: interviewModel,
+    model: chatModel(isPaid),
     schema: judgeSchema,
     system: JUDGE_SYSTEM_PROMPT,
     maxRetries: 2,

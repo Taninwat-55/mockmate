@@ -1,6 +1,6 @@
 import { generateObject } from "ai"
 
-import { interviewModel } from "@/lib/ai"
+import { gradingModel } from "@/lib/ai"
 import { feedbackSchema, type GradingFeedback } from "@/types/feedback"
 import type { EvaluationNote } from "@/types/interview"
 
@@ -29,7 +29,10 @@ Overall signal:
 
 Overall summary: exactly 2 sentences — one on what went well, one on the most important thing to improve.`
 
-export async function generateFeedback(notes: EvaluationNote[]): Promise<GradingFeedback> {
+export async function generateFeedback(
+  notes: EvaluationNote[],
+  isPaid: boolean,
+): Promise<GradingFeedback> {
   const notesText = notes
     .map(
       (note, i) =>
@@ -38,7 +41,7 @@ export async function generateFeedback(notes: EvaluationNote[]): Promise<Grading
     .join("\n\n")
 
   const { object } = await generateObject({
-    model: interviewModel,
+    model: gradingModel(isPaid),
     schema: feedbackSchema,
     system: GRADING_SYSTEM_PROMPT,
     messages: [
