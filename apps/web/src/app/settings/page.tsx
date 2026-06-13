@@ -27,12 +27,11 @@ export default async function SettingsPage() {
       name: true,
       email: true,
       image: true,
-      subscriptionStatus: true,
     },
   })
   if (!user) notFound()
 
-  const usage = await getWeeklyUsage(session.user.id, user.subscriptionStatus)
+  const usage = await getWeeklyUsage(session.user.id)
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
