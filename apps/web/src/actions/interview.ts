@@ -11,7 +11,7 @@ import {
   MessageType,
 } from "@mockmate/db"
 import { auth } from "@/auth"
-import { interviewModel } from "@/lib/ai"
+import { chatModel } from "@/lib/ai"
 import { buildInterviewMessages } from "@/lib/interviewer-prompt"
 import { posthog } from "@/lib/posthog"
 
@@ -42,6 +42,11 @@ const newInterviewSchema = z.object({
       MAX_INPUT_CHARS,
       `Job description must be ${MAX_INPUT_CHARS.toLocaleString("en-US")} characters or fewer.`,
     ),
+  // The user's pick when they hold BOTH a credit and a free weekly session.
+  // Ignored (and the entitlement decided automatically) when only one is
+  // available. The server is authoritative — this is treated as intent, then
+  // re-checked against the real balance below.
+  preferCredit: z.boolean().optional(),
 })
 
 export type NewInterviewInput = z.infer<typeof newInterviewSchema>
@@ -61,17 +66,80 @@ export async function createInterviewSession(
     return { success: false, error: parsed.error.issues[0].message }
   }
 
+  // Entitlement (#16): a session is paid (Pro models) if it spends a credit, or
+  // free (Flash) if it uses the weekly allowance. When the user has both, honour
+  // their pick; with only one available, decide automatically; with neither,
+  // block and point them to /buy.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { creditBalance: true, freeSessionRefreshAt: true, isOwner: true },
+  })
+  if (!user) {
+    return { success: false, error: "You need to be signed in to start an interview." }
+  }
+
+  const now = new Date()
+  const creditAvailable = user.creditBalance > 0
+  const freeAvailable = now >= user.freeSessionRefreshAt
+
+  let usePaid: boolean
+  if (user.isOwner) {
+    // Platform owner: always Pro, never consumes a credit or the weekly free.
+    usePaid = true
+  } else if (creditAvailable && freeAvailable) {
+    usePaid = parsed.data.preferCredit ?? false
+  } else if (creditAvailable) {
+    usePaid = true
+  } else if (freeAvailable) {
+    usePaid = false
+  } else {
+    const days = Math.max(
+      1,
+      Math.ceil((user.freeSessionRefreshAt.getTime() - now.getTime()) / 86_400_000),
+    )
+    return {
+      success: false,
+      error: `You're out of credits, and your free session resets in ${days} day${
+        days === 1 ? "" : "s"
+      }. Buy credits to start one now.`,
+    }
+  }
+
+  // Spend the entitlement and create the session atomically. The conditional
+  // updates (gt:0 / lte:now) are the race guard: two concurrent starts can't both
+  // win the same credit or the same weekly free.
   let interview
   try {
-    interview = await prisma.interviewSession.create({
-      data: {
-        userId: session.user.id,
-        title: parsed.data.title,
-        resume: parsed.data.resume,
-        jobDescription: parsed.data.jobDescription,
-        // status defaults to IN_PROGRESS in the schema
-      },
-      select: { id: true },
+    interview = await prisma.$transaction(async (tx) => {
+      // Owners consume no entitlement — skip straight to creating the session.
+      if (!user.isOwner) {
+        if (usePaid) {
+          const spent = await tx.user.updateMany({
+            where: { id: session.user.id, creditBalance: { gt: 0 } },
+            data: { creditBalance: { decrement: 1 } },
+          })
+          if (spent.count !== 1) throw new Error("ENTITLEMENT_RACE")
+        } else {
+          const next = new Date(now.getTime() + 7 * 86_400_000)
+          const claimed = await tx.user.updateMany({
+            where: { id: session.user.id, freeSessionRefreshAt: { lte: now } },
+            data: { freeSessionRefreshAt: next },
+          })
+          if (claimed.count !== 1) throw new Error("ENTITLEMENT_RACE")
+        }
+      }
+
+      return tx.interviewSession.create({
+        data: {
+          userId: session.user.id,
+          title: parsed.data.title,
+          resume: parsed.data.resume,
+          jobDescription: parsed.data.jobDescription,
+          isPaid: usePaid,
+          // status defaults to IN_PROGRESS in the schema
+        },
+        select: { id: true },
+      })
     })
   } catch {
     return {
@@ -88,6 +156,7 @@ export async function createInterviewSession(
         session_id: interview.id,
         user_id: session.user.id,
         role_title: parsed.data.title,
+        tier: usePaid ? "paid" : "free",
       },
     })
   } catch {}
@@ -118,6 +187,7 @@ export async function startInterview(
     select: {
       id: true,
       status: true,
+      isPaid: true,
       resume: true,
       jobDescription: true,
       questions: {
@@ -142,7 +212,7 @@ export async function startInterview(
 
   try {
     const { text } = await generateText({
-      model: interviewModel,
+      model: chatModel(interview.isPaid),
       maxRetries: 2,
       messages: buildInterviewMessages({
         resume: interview.resume,
