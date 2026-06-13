@@ -18,11 +18,13 @@ export default async function DashboardPage() {
           savedResume: true,
           creditBalance: true,
           freeSessionRefreshAt: true,
+          isOwner: true,
         },
       })
     : null
   const savedResume = userRecord?.savedResume ?? undefined
   const credits = userRecord?.creditBalance ?? 0
+  const isOwner = userRecord?.isOwner ?? false
   const freeAvailable = userRecord
     ? new Date() >= userRecord.freeSessionRefreshAt
     : false
@@ -56,6 +58,7 @@ export default async function DashboardPage() {
           savedResume={savedResume}
           credits={credits}
           freeAvailable={freeAvailable}
+          isOwner={isOwner}
         />
       </div>
 

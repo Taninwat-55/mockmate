@@ -36,16 +36,19 @@ function CharCount({ value }: { value: string }) {
 type NewInterviewFormProps = {
   // Resume text saved from a previous PDF upload; pre-fills the textarea.
   savedResume?: string
-  // Billing entitlement (#16): how many Pro credits the user holds, and whether
-  // their weekly free session is currently available.
+  // Billing entitlement (#16): how many Pro credits the user holds, whether
+  // their weekly free session is available, and whether they're the platform
+  // owner (unlimited Pro, never charged).
   credits: number
   freeAvailable: boolean
+  isOwner: boolean
 }
 
 export function NewInterviewForm({
   savedResume = "",
   credits,
   freeAvailable,
+  isOwner,
 }: NewInterviewFormProps) {
   const [title, setTitle] = useState("")
   const [resume, setResume] = useState(savedResume)
@@ -61,11 +64,13 @@ export function NewInterviewForm({
   const usingSavedResume = savedResume.length > 0 && resume === savedResume
   const busy = isPending || isParsing
 
+  // Owners bypass entitlement entirely, so none of the free/credit/blocked
+  // states apply to them.
   const hasCredit = credits > 0
-  const bothAvailable = hasCredit && freeAvailable
-  const onlyCredit = hasCredit && !freeAvailable
-  const onlyFree = !hasCredit && freeAvailable
-  const blocked = !hasCredit && !freeAvailable
+  const bothAvailable = !isOwner && hasCredit && freeAvailable
+  const onlyCredit = !isOwner && hasCredit && !freeAvailable
+  const onlyFree = !isOwner && !hasCredit && freeAvailable
+  const blocked = !isOwner && !hasCredit && !freeAvailable
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -203,6 +208,14 @@ export function NewInterviewForm({
           className="min-h-40"
         />
       </div>
+
+      {isOwner && (
+        <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Owner</span> — unlimited
+          Pro. Every session runs on the Pro models; no credit or weekly free is
+          used.
+        </p>
+      )}
 
       {bothAvailable && (
         <fieldset className="space-y-2 rounded-lg border border-border p-3">

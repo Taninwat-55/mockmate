@@ -28,6 +28,7 @@ export default async function SettingsPage() {
       email: true,
       image: true,
       creditBalance: true,
+      isOwner: true,
     },
   })
   if (!user) notFound()
@@ -75,22 +76,32 @@ export default async function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between gap-4">
+            {user.isOwner ? (
               <div>
-                <p className="text-sm font-medium tabular-nums">
-                  {user.creditBalance}{" "}
-                  {user.creditBalance === 1 ? "credit" : "credits"}
-                </p>
+                <p className="text-sm font-medium">Owner — unlimited Pro</p>
                 <p className="text-sm text-muted-foreground">
-                  1 credit = 1 Pro interview. No subscription.
+                  Every interview runs on the Pro models. You&apos;re never
+                  charged a credit or the weekly free session.
                 </p>
               </div>
-              <Link href="/buy" className={buttonVariants()}>
-                Buy credits
-              </Link>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium tabular-nums">
+                      {user.creditBalance}{" "}
+                      {user.creditBalance === 1 ? "credit" : "credits"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      1 credit = 1 Pro interview. No subscription.
+                    </p>
+                  </div>
+                  <Link href="/buy" className={buttonVariants()}>
+                    Buy credits
+                  </Link>
+                </div>
 
-            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
+                <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
               <p>
                 <span className="font-medium tabular-nums">
                   {usage.used} of {usage.limit}
@@ -108,11 +119,14 @@ export default async function SettingsPage() {
               </p>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Credits unlock the Pro models (sharper interviewer and grading), the
-              full feedback report by email, and full session history. A single
-              session is 19&nbsp;DKK, or a 5-session pack for 79&nbsp;DKK.
-            </p>
+                <p className="text-xs text-muted-foreground">
+                  Credits unlock the Pro models (sharper interviewer and grading),
+                  the full feedback report by email, and full session history. A
+                  single session is 19&nbsp;DKK, or a 5-session pack for
+                  79&nbsp;DKK.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
