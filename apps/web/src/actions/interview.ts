@@ -72,7 +72,7 @@ export async function createInterviewSession(
   // block and point them to /buy.
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { creditBalance: true, freeSessionRefreshAt: true },
+    select: { creditBalance: true, freeSessionRefreshAt: true, isOwner: true },
   })
   if (!user) {
     return { success: false, error: "You need to be signed in to start an interview." }
@@ -83,7 +83,10 @@ export async function createInterviewSession(
   const freeAvailable = now >= user.freeSessionRefreshAt
 
   let usePaid: boolean
-  if (creditAvailable && freeAvailable) {
+  if (user.isOwner) {
+    // Platform owner: always Pro, never consumes a credit or the weekly free.
+    usePaid = true
+  } else if (creditAvailable && freeAvailable) {
     usePaid = parsed.data.preferCredit ?? false
   } else if (creditAvailable) {
     usePaid = true
@@ -108,19 +111,22 @@ export async function createInterviewSession(
   let interview
   try {
     interview = await prisma.$transaction(async (tx) => {
-      if (usePaid) {
-        const spent = await tx.user.updateMany({
-          where: { id: session.user.id, creditBalance: { gt: 0 } },
-          data: { creditBalance: { decrement: 1 } },
-        })
-        if (spent.count !== 1) throw new Error("ENTITLEMENT_RACE")
-      } else {
-        const next = new Date(now.getTime() + 7 * 86_400_000)
-        const claimed = await tx.user.updateMany({
-          where: { id: session.user.id, freeSessionRefreshAt: { lte: now } },
-          data: { freeSessionRefreshAt: next },
-        })
-        if (claimed.count !== 1) throw new Error("ENTITLEMENT_RACE")
+      // Owners consume no entitlement — skip straight to creating the session.
+      if (!user.isOwner) {
+        if (usePaid) {
+          const spent = await tx.user.updateMany({
+            where: { id: session.user.id, creditBalance: { gt: 0 } },
+            data: { creditBalance: { decrement: 1 } },
+          })
+          if (spent.count !== 1) throw new Error("ENTITLEMENT_RACE")
+        } else {
+          const next = new Date(now.getTime() + 7 * 86_400_000)
+          const claimed = await tx.user.updateMany({
+            where: { id: session.user.id, freeSessionRefreshAt: { lte: now } },
+            data: { freeSessionRefreshAt: next },
+          })
+          if (claimed.count !== 1) throw new Error("ENTITLEMENT_RACE")
+        }
       }
 
       return tx.interviewSession.create({

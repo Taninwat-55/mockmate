@@ -30,6 +30,7 @@ model User {
   savedResume        String?            @db.Text // last uploaded CV, plain text — pre-fills new sessions (#29)
   creditBalance      Int                @default(0)   // pay-per-use credits; 1 credit = 1 Pro interview (#16)
   freeSessionRefreshAt DateTime         @default(now()) // free tier: 1 session / 7 days; set to now()+7d when a free session starts (#16)
+  isOwner            Boolean            @default(false) // platform owner: unlimited Pro, never charged a credit or weekly free (#16)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
