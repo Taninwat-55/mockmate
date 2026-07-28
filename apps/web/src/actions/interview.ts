@@ -13,6 +13,12 @@ import {
 import { auth } from "@/auth"
 import { chatModel } from "@/lib/ai"
 import { buildInterviewMessages } from "@/lib/interviewer-prompt"
+import {
+  acquireTurnLock,
+  claimLlmCalls,
+  releaseTurnLock,
+} from "@/lib/ai-guard"
+import { limitUser } from "@/lib/rate-limit"
 import { posthog } from "@/lib/posthog"
 
 // Server-side input caps (PRD §6). Resume and JD are each limited to 6,000 chars
@@ -64,6 +70,17 @@ export async function createInterviewSession(
   const parsed = newInterviewSchema.safeParse(input)
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message }
+  }
+
+  // Backstop above the credit/free entitlement below. Entitlement caps what a user
+  // is owed; this caps what any single account can cost us per day regardless —
+  // including owner accounts, which bypass entitlement entirely.
+  const limit = await limitUser("sessionCreate", session.user.id)
+  if (!limit.ok) {
+    return {
+      success: false,
+      error: "You've started a lot of interviews today. Please try again tomorrow.",
+    }
   }
 
   // Entitlement (#16): a session is paid (Pro models) if it spends a credit, or
@@ -182,38 +199,64 @@ export async function startInterview(
     return { success: false, error: "You need to be signed in." }
   }
 
-  const interview = await prisma.interviewSession.findFirst({
-    where: { id: sessionId, userId: session.user.id },
-    select: {
-      id: true,
-      status: true,
-      isPaid: true,
-      resume: true,
-      jobDescription: true,
-      questions: {
-        orderBy: { questionNumber: "asc" },
-        take: 1,
-        select: { messages: { take: 1, select: { id: true, content: true } } },
-      },
-    },
-  })
-  if (!interview) {
-    return { success: false, error: "Interview not found." }
-  }
-  if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
-    return { success: false, error: "This interview has already ended." }
+  const limit = await limitUser("startInterview", session.user.id)
+  if (!limit.ok) {
+    return { success: false, error: "You're going too fast. Please try again shortly." }
   }
 
-  // Already opened — return the existing first question.
-  const existing = interview.questions[0]?.messages[0]
-  if (existing) {
-    return { success: true, question: { id: existing.id, text: existing.content } }
+  // The "already opened?" check below is idempotency, not a spend guard — parallel
+  // calls all miss it and all call the model. Take the session's turn lock first so
+  // only one opening question can ever be generated at a time.
+  if (!(await acquireTurnLock(sessionId, session.user.id))) {
+    const owned = await prisma.interviewSession.findFirst({
+      where: { id: sessionId, userId: session.user.id },
+      select: { id: true },
+    })
+    return {
+      success: false,
+      error: owned
+        ? "This interview is already starting. Give it a moment."
+        : "Interview not found.",
+    }
   }
 
   try {
+    const interview = await prisma.interviewSession.findFirst({
+      where: { id: sessionId, userId: session.user.id },
+      select: {
+        id: true,
+        status: true,
+        isPaid: true,
+        resume: true,
+        jobDescription: true,
+        questions: {
+          orderBy: { questionNumber: "asc" },
+          take: 1,
+          select: { messages: { take: 1, select: { id: true, content: true } } },
+        },
+      },
+    })
+    if (!interview) {
+      return { success: false, error: "Interview not found." }
+    }
+    if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
+      return { success: false, error: "This interview has already ended." }
+    }
+
+    // Already opened — return the existing first question.
+    const existing = interview.questions[0]?.messages[0]
+    if (existing) {
+      return { success: true, question: { id: existing.id, text: existing.content } }
+    }
+
+    if (!(await claimLlmCalls(sessionId, 1))) {
+      return { success: false, error: "This interview has reached its limit." }
+    }
+
     const { text } = await generateText({
       model: chatModel(interview.isPaid),
       maxRetries: 2,
+      maxOutputTokens: 1000,
       messages: buildInterviewMessages({
         resume: interview.resume,
         jobDescription: interview.jobDescription,
@@ -251,6 +294,8 @@ export async function startInterview(
       success: false,
       error: "Couldn't start the interview. Please try again.",
     }
+  } finally {
+    await releaseTurnLock(sessionId)
   }
 }
 

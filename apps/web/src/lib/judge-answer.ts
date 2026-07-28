@@ -45,6 +45,7 @@ export async function judgeAnswerWeak({
     schema: judgeSchema,
     system: JUDGE_SYSTEM_PROMPT,
     maxRetries: 2,
+    maxOutputTokens: 300,
     messages: [
       {
         role: "user",
