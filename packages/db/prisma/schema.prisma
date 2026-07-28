@@ -126,6 +126,8 @@ model InterviewSession {
   resume            String                 @db.Text
   mainQuestionCount Int                    @default(0)
   isPaid            Boolean                @default(false) // true = paid (credit) session → Pro models, email report, no history cap (#16)
+  llmCallCount      Int                    @default(0)     // hard lifetime budget of AI calls for this session — see lib/ai-guard.ts
+  turnLockedAt      DateTime?                              // claim lock: at most one AI turn in flight per session; self-expires
   createdAt         DateTime               @default(now())
   lastActiveAt      DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
@@ -220,4 +222,20 @@ model CreditPurchase {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ============================================================
+// ABUSE CONTROL — fixed-window rate limiter
+// ============================================================
+// One row per limiter bucket (e.g. "interviewTurn:<userId>"). Written with a
+// single atomic INSERT ... ON CONFLICT so concurrent requests can't both read a
+// stale count and slip past the limit — see lib/rate-limit.ts. Deliberately a
+// plain Postgres table: no Redis, no extra service, no extra bill.
+model RateLimit {
+  key         String   @id
+  windowStart DateTime @default(now())
+  count       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart]) // lets old buckets be swept by the cleanup cron
 }

@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { CREDIT_PACKS, getStripe } from "@/lib/stripe"
+import { limitUser, tooManyRequests } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
 
@@ -22,6 +23,9 @@ export async function POST(req: Request) {
       { status: 401 },
     )
   }
+
+  const limit = await limitUser("checkout", session.user.id)
+  if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds)
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {

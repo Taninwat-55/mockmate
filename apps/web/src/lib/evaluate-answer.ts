@@ -38,6 +38,7 @@ export async function generateEvaluationNote({
     model: gradingModel(isPaid),
     schema: evaluationNoteSchema,
     maxRetries: 2,
+    maxOutputTokens: 800,
     system: EVALUATION_SYSTEM_PROMPT,
     messages: [
       {
