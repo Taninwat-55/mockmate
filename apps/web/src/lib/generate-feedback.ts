@@ -44,6 +44,8 @@ export async function generateFeedback(
     model: gradingModel(isPaid),
     schema: feedbackSchema,
     system: GRADING_SYSTEM_PROMPT,
+    maxRetries: 2,
+    maxOutputTokens: 2000,
     messages: [
       {
         role: "user",

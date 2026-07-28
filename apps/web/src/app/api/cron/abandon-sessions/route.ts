@@ -59,5 +59,16 @@ export async function GET(req: Request) {
     data: { status: InterviewSessionStatus.ABANDONED },
   })
 
-  return Response.json({ abandoned: freeAbandoned + refunded, refunded })
+  // Sweep spent rate-limit buckets. The limiter never reads an expired window, so
+  // these rows are dead weight once their window has closed; the longest window in
+  // use is 24h, so anything older than 48h is safe to drop.
+  const { count: limitsSwept } = await prisma.rateLimit.deleteMany({
+    where: { windowStart: { lt: new Date(Date.now() - 48 * 60 * 60 * 1000) } },
+  })
+
+  return Response.json({
+    abandoned: freeAbandoned + refunded,
+    refunded,
+    limitsSwept,
+  })
 }
