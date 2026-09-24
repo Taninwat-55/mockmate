@@ -21,6 +21,7 @@ import {
 } from "@/lib/interview-engine"
 import { generateEvaluationNote } from "@/lib/evaluate-answer"
 import { judgeAnswerWeak } from "@/lib/judge-answer"
+import { toInterviewContext } from "@/lib/interview-context"
 import {
   acquireTurnLock,
   claimLlmCalls,
@@ -125,6 +126,10 @@ export async function POST(
       id: true,
       status: true,
       isPaid: true,
+      title: true,
+      seniority: true,
+      workSetting: true,
+      employmentType: true,
       resume: true,
       jobDescription: true,
       mainQuestionCount: true,
@@ -148,6 +153,7 @@ export async function POST(
     await releaseTurnLock(id)
     return Response.json({ error: "Interview not found." }, { status: 404 })
   }
+  const context = toInterviewContext(interview)
   if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
     await releaseTurnLock(id)
     return Response.json(
@@ -242,6 +248,7 @@ export async function POST(
 
   try {
     const llmJudgedWeak = await judgeAnswerWeak({
+      context,
       questionText: current.questionText,
       conversation: currentTurns,
       isPaid: interview.isPaid,
@@ -256,7 +263,7 @@ export async function POST(
     if (action === "ASK_FOLLOWUP") {
       directive =
         current.followupCount === 0
-          ? "The candidate's answer was weak — vague, too short, or missing relevant technical substance. Ask one pointed follow-up that makes them be specific or explain their reasoning. Do not give them the answer."
+          ? "The candidate's answer was weak — vague, too short, or missing substance relevant to the question and the role. Ask one pointed follow-up that makes them be specific or explain their reasoning. Do not give them the answer."
           : "The candidate's answer is still weak after one follow-up. Ask one final follow-up; you may add a light hint or nudge to avoid a dead end. Do not follow up again after this."
     } else if (action === "END_SESSION") {
       directive =
@@ -293,7 +300,11 @@ export async function POST(
     messages: [
       {
         role: "user",
-        content: buildContextMessage(interview.resume, interview.jobDescription),
+        content: buildContextMessage({
+          context,
+          resume: interview.resume,
+          jobDescription: interview.jobDescription,
+        }),
       },
       ...historyTurns,
     ],
@@ -326,6 +337,7 @@ export async function POST(
       // budget the question is still closed, just without a note.
       const note = (await claimLlmCalls(id, 1))
         ? await generateEvaluationNote({
+            context,
             questionText: current.questionText,
             conversation: currentTurns,
             isPaid: interview.isPaid,

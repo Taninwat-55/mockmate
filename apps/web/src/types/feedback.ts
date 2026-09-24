@@ -5,10 +5,10 @@ import { z } from "zod"
 // Prisma model fields exactly. Three dimensions each carry a 1–5 score plus three
 // written observations; the overall signal maps to the OverallSignal enum.
 export const feedbackSchema = z.object({
-  technicalAccuracyScore: z.number().int().min(1).max(5),
-  technicalAccuracyStrength: z.string().min(1),
-  technicalAccuracyWeakness: z.string().min(1),
-  technicalAccuracyTip: z.string().min(1),
+  roleKnowledgeScore: z.number().int().min(1).max(5),
+  roleKnowledgeStrength: z.string().min(1),
+  roleKnowledgeWeakness: z.string().min(1),
+  roleKnowledgeTip: z.string().min(1),
 
   communicationClarityScore: z.number().int().min(1).max(5),
   communicationClarityStrength: z.string().min(1),

@@ -9,7 +9,6 @@ Paste a job description → get custom coding or system design questions → ans
 ## What This Project Demonstrates
 
 - Full-stack Next.js app deployed on Vercel
-- AWS infrastructure provisioned with Terraform (S3, CloudFront, Lambda)
 - AI agents with tool-calling (question generation, answer grading, DB lookups)
 - Rate limit handling for LLM providers
 - Stripe subscription + credit system
@@ -29,7 +28,7 @@ Paste a job description → get custom coding or system design questions → ans
 | Analytics | PostHog |
 | File Storage | AWS S3 |
 | CDN | AWS CloudFront |
-| Background Jobs | AWS Lambda |
+| Email | Resend |
 | Infrastructure | Terraform |
 | Deployment | Vercel |
 

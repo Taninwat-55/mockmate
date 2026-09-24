@@ -32,7 +32,7 @@ export function isAnswerTooShort(text: string): boolean {
 }
 
 // Combine the deterministic length check with the LLM's semantic verdict (vague, or
-// no relevant technical concept — PRD §6) into a single assessment. An answer is weak
+// no role-relevant substance — PRD §6) into a single assessment. An answer is weak
 // if it is too short OR the model judged it weak.
 export function assessAnswer(
   text: string,

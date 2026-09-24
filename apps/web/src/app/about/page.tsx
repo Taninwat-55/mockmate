@@ -6,7 +6,7 @@ import { Logo } from "@/components/brand/Logo"
 export const metadata: Metadata = {
   title: "About",
   description:
-    "MockMate is an AI-powered mock-interview tool that runs a realistic technical interview tailored to the job you're targeting, then grades you like a hiring panel.",
+    "MockMate is an AI-powered mock-interview tool that runs a realistic interview for any role, tailored to your level and the job you're targeting, then grades you like a hiring manager.",
   alternates: { canonical: "/about" },
 }
 
@@ -37,9 +37,9 @@ export default function AboutPage() {
         </h1>
         <p className="mt-7 text-[18px] leading-relaxed text-muted-foreground">
           MockMate is an AI-powered mock-interview tool that runs a realistic, multi-turn
-          technical interview tailored to a specific job description, then returns graded
-          feedback like a hiring panel would. It exists to fix a common problem: most people
-          fail technical interviews not because they lack the knowledge, but because they
+          interview for any role, tailored to your level and the job you&apos;re targeting,
+          then returns graded feedback like a hiring manager would. It exists to fix a common
+          problem: most people fail interviews not because they lack the ability, but because they
           freeze under pressure. Reading prep lists and watching walkthroughs doesn&apos;t
           simulate being put on the spot. MockMate does.
         </p>
@@ -53,10 +53,10 @@ export default function AboutPage() {
                 1
               </span>
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
-                <span className="font-medium text-foreground">Paste the job and your résumé.</span>{" "}
-                You drop in the job description you&apos;re targeting and your résumé as plain
-                text. That&apos;s the entire setup — both become the AI&apos;s context for the
-                session.
+                <span className="font-medium text-foreground">Pick your role and level.</span>{" "}
+                Type the role you&apos;re interviewing for and pick your level. If you have them,
+                add the job posting and your résumé as plain text — they make the questions
+                sharper.
               </p>
             </li>
             <li className="flex gap-4">
@@ -65,7 +65,7 @@ export default function AboutPage() {
               </span>
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
                 <span className="font-medium text-foreground">Sit the interview.</span>{" "}
-                An AI interviewer asks five technical questions derived from that role — and
+                An AI interviewer asks five questions for that role and level — and
                 digs in with up to two follow-ups each, challenging vague or incomplete
                 answers exactly like a real panel.
               </p>
@@ -76,7 +76,7 @@ export default function AboutPage() {
               </span>
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
                 <span className="font-medium text-foreground">Read the verdict.</span>{" "}
-                At the end you get a graded scorecard across Technical Accuracy,
+                At the end you get a graded scorecard across Role Knowledge,
                 Communication Clarity, and Problem-solving Approach — each scored 1–5 — plus a
                 clear Strong&nbsp;Hire / Hire / No&nbsp;Hire signal and a short summary.
               </p>
@@ -88,11 +88,11 @@ export default function AboutPage() {
         <section className="mt-16">
           <h2 className="text-[26px] font-semibold tracking-[-0.02em]">Who it&apos;s for</h2>
           <p className="mt-6 text-[16.5px] leading-relaxed text-muted-foreground">
-            MockMate is built for developers and career changers — typically junior to
-            mid-level — preparing for a technical interview at a company they actually want to
-            work at. Because it&apos;s text-first, it also lowers the barrier for non-native
-            English speakers, who can read and compose answers carefully while still building
-            the skill of explaining technical ideas clearly under pressure.
+            MockMate is built for anyone preparing for an interview, in any field — and
+            especially for students, first-time job seekers and juniors heading into their
+            first real interviews. Because it&apos;s text-first, it also lowers the barrier for
+            non-native English speakers, who can read and compose answers carefully while still
+            building the skill of explaining themselves clearly under pressure.
           </p>
         </section>
 

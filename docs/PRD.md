@@ -10,27 +10,29 @@
 
 ## 1. Executive Summary & Problem Statement
 
-Job seekers — especially junior developers and career changers — frequently underperform in technical interviews not because they lack knowledge, but because they lack realistic practice. Reading LeetCode solutions and watching YouTube breakdowns does not simulate being put on the spot. When the pressure is real, most people freeze.
+Job seekers — especially students, first-time job seekers and juniors, in any field — frequently underperform in interviews not because they lack ability, but because they lack realistic practice. Reading lists of common questions and watching YouTube breakdowns does not simulate being put on the spot. When the pressure is real, most people freeze.
 
 Existing tools don't solve this well. Static question banks have no feedback loop. Human mock interviewers cost money and require scheduling. AI chatbots exist but treat interviews like Q&A sessions — they ask one question, accept any answer, and move on. None of them simulate the actual dynamic: an interviewer who follows up, challenges weak answers, and holds you accountable.
 
-MockMate solves this by combining three things in one flow: a job description the user is actually targeting, their resume as context, and an AI interviewer that conducts a realistic multi-turn session and delivers structured, graded feedback at the end.
+MockMate solves this by combining three things in one flow: the role and level the user is interviewing for (optionally with the job posting and their resume), and an AI interviewer that conducts a realistic multi-turn session and delivers structured, graded feedback at the end.
 
 ---
 
 ## 2. Target Persona
 
-**Name:** Alex  
-**Age:** 24–28  
-**Background:** Junior to mid-level developer. Recently graduated or 1–2 years into their first role. Applying for their next position — something more senior, or at a company they actually want to work at.
+> Updated for #44 (any-role support): the persona is no longer limited to developers.
 
-**The situation:** Alex has a job posting open in one tab and their resume in another. They've read the JD three times. They think they're qualified. But when they imagine being asked "walk me through how you'd design a URL shortener" out loud, in real time, to a stranger — they go blank.
+**Name:** Alex  
+**Age:** 18–26  
+**Background:** A student, a first-time job seeker, or a junior with 1–2 years of experience, in any field: a café or shop job, healthcare, logistics, office work, or tech. Often heading into one of their first real interviews. May not have a polished resume, or a specific job posting yet.
+
+**The situation:** Alex has an interview coming up. They think they could do the job. But when they imagine being asked "tell me about a time you dealt with an upset customer" out loud, in real time, to a stranger — they go blank.
 
 **What they're doing today instead:** Skimming interview prep lists, re-reading their own resume, maybe watching a YouTube walkthrough. None of it simulates the pressure of a real session. None of it tells them where they actually broke down.
 
 **What success looks like:** Alex walks into the real interview having already been "interrogated" for 20 minutes by an AI that knew the JD, challenged vague answers, and then told them exactly where they were weak and what to fix.
 
-**Secondary note:** This persona is especially relevant for non-native English speakers, who face the additional pressure of communicating technical ideas clearly in a second language. MockMate's text-first format lowers the barrier while still building the skill.
+**Secondary note:** This persona is especially relevant for non-native English speakers, who face the additional pressure of explaining themselves clearly in a second language. MockMate's text-first format lowers the barrier while still building the skill.
 
 ---
 
@@ -65,20 +67,20 @@ Audio and video processing add infrastructure cost, latency, and complexity. Tex
 ### In Scope — Phase 1
 
 **Resume + JD Input**  
-Users paste their resume as plain text and paste the job description they are targeting. Both inputs are saved to the database and become the AI's context for the entire session. PDF upload is deferred to Phase 2.
+Users type the role they're interviewing for and pick their level (Student / Intern, Entry-level, Junior, Mid / Senior), plus optionally work setting and employment type. Pasting their resume and the job posting is optional (#44) but makes the questions sharper. All inputs are saved to the database and become the AI's context for the entire session. PDF upload is deferred to Phase 2.
 
 **Interactive Chat Session**  
-A multi-turn chat interface where the AI acts as a technical interviewer. The AI uses the JD and resume to generate relevant questions, follow up on answers, and challenge vague or incomplete responses. Full AI behavior rules are defined in Section 6.
+A multi-turn chat interface where the AI acts as an interviewer for the chosen role. The AI uses the role, level, and (when provided) the JD and resume to generate relevant questions, follow up on answers, and challenge vague or incomplete responses. Full AI behavior rules are defined in Section 6.
 
 **Single AI Interviewer Persona**  
-One well-tuned persona for MVP: a senior engineer conducting a technical screening round. Grounded, direct, and realistic. A second persona (e.g., behavioral/HR focus) is deferred to Phase 2 once we validate the core loop.
+One well-tuned persona for MVP: an experienced hiring manager for the chosen role, calibrated to the candidate's level. It mixes motivation, behavioral, situational and role-knowledge questions, and only asks technical questions for technical roles. Grounded, direct, and realistic. A second persona (e.g., behavioral/HR focus) is deferred to Phase 2 once we validate the core loop.
 
 **Structured Grading Matrix**  
 An assessment screen generated at session end. Grades the user across three dimensions, each scored 1–5:
 
 | Dimension | What it measures |
 |---|---|
-| Technical Accuracy | Correctness, use of right terminology, depth of explanation |
+| Role Knowledge | Understanding of the job, relevant skills and correct practice for the role (technical depth only for technical roles) |
 | Communication Clarity | Structure, ability to explain concepts simply, use of examples |
 | Problem-solving Approach | How the user breaks down the problem, edge case thinking, clarifying questions |
 
@@ -116,8 +118,8 @@ Every session consists of exactly 5 main questions. The AI selects questions bas
 **Follow-up rules**  
 The AI may follow up on a main question a maximum of 2 times before moving on.
 
-- Follow-up 1 is triggered when the answer is vague, too short (under 40 words), or fails to mention any technical concept relevant to the question. The follow-up challenges: "Can you be more specific?" or "What was your reasoning there?"
-- Follow-up 2 is triggered if follow-up 1 also produces a weak answer. This follow-up may include a light nudge or hint to avoid complete deadlock: "Think about how the system would behave under load — does that change your answer?"
+- Follow-up 1 is triggered when the answer is vague, too short (under 40 words), or has no substance relevant to the question and the role. The follow-up challenges: "Can you be more specific?" or "What was your reasoning there?"
+- Follow-up 2 is triggered if follow-up 1 also produces a weak answer. This follow-up may include a light nudge or hint to avoid complete deadlock: "Think about how the customer felt in that moment — what would you do first?"
 - If the answer is still weak after 2 follow-ups, the AI logs the question as **unresolved** and moves to the next main question. It does not follow up a third time.
 - Follow-up exchanges do not increment `main_question_count`.
 

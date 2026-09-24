@@ -26,12 +26,12 @@ export const SITE_TAGLINE = "AI mock interviews with graded feedback"
  * (JSON-LD, /about, llms.txt). Factual — sourced from docs/PRD.md.
  */
 export const SITE_LONG_DESCRIPTION =
-  "MockMate is an AI-powered mock-interview tool for developers and job seekers. It runs a realistic, multi-turn technical interview based on the job description you paste and your résumé, asks five questions with up to two follow-ups each, then returns graded feedback across Technical Accuracy, Communication Clarity, and Problem-solving Approach with a Strong Hire / Hire / No Hire signal. It runs entirely in the browser and is text-first."
+  "MockMate is an AI-powered mock-interview tool for job seekers in any field, especially first-timers and juniors. It runs a realistic, multi-turn interview for any role, calibrated to your level and optionally to a job posting and your résumé, asks five questions with up to two follow-ups each, then returns graded feedback across Role Knowledge, Communication Clarity, and Problem-solving Approach with a Strong Hire / Hire / No Hire signal. It runs entirely in the browser and is text-first."
 
 export const SITE_KEYWORDS = [
   "AI mock interview",
   "mock interview tool",
-  "technical interview practice",
+  "first job interview practice",
   "interview preparation",
   "AI interviewer",
   "coding interview practice",

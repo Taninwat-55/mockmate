@@ -1,14 +1,16 @@
+import { after } from "next/server"
 import { Prisma, prisma, InterviewSessionStatus } from "@mockmate/db"
 import { auth } from "@/auth"
 import { generateFeedback } from "@/lib/generate-feedback"
-import { invokeEmailLambda } from "@/lib/invoke-email-lambda"
+import { sendSessionSummaryEmail } from "@/lib/session-summary-email"
 import {
   acquireTurnLock,
   claimLlmCalls,
   releaseTurnLock,
 } from "@/lib/ai-guard"
 import { limitUser, tooManyRequests } from "@/lib/rate-limit"
-import type { EvaluationNote } from "@/types/interview"
+import { toInterviewContext } from "@/lib/interview-context"
+import { parseEvaluationNote, type EvaluationNote } from "@/types/interview"
 
 export const maxDuration = 60
 
@@ -37,7 +39,14 @@ export async function POST(
 
   const interview = await prisma.interviewSession.findFirst({
     where: { id, userId: session.user.id },
-    select: { status: true, isPaid: true },
+    select: {
+      status: true,
+      isPaid: true,
+      title: true,
+      seniority: true,
+      workSetting: true,
+      employmentType: true,
+    },
   })
 
   if (!interview) {
@@ -80,7 +89,7 @@ export async function POST(
 
   const notes: EvaluationNote[] = questions
     .filter((q) => q.evaluationNote !== null)
-    .map((q) => JSON.parse(q.evaluationNote as string) as EvaluationNote)
+    .map((q) => parseEvaluationNote(q.evaluationNote as string))
 
   if (notes.length === 0) {
     await releaseTurnLock(id)
@@ -97,7 +106,7 @@ export async function POST(
 
   let result: Awaited<ReturnType<typeof generateFeedback>>
   try {
-    result = await generateFeedback(notes, interview.isPaid)
+    result = await generateFeedback(notes, toInterviewContext(interview), interview.isPaid)
   } catch {
     await releaseTurnLock(id)
     return Response.json({ error: "Failed to generate feedback" }, { status: 500 })
@@ -108,8 +117,8 @@ export async function POST(
       data: { interviewSessionId: id, ...result },
     })
     // Email summary is a paid-session perk (#16) — free sessions get the web
-    // report only.
-    if (interview.isPaid) void invokeEmailLambda(id)
+    // report only. `after` sends it once the response is out (#54).
+    if (interview.isPaid) after(() => sendSessionSummaryEmail(id))
     return Response.json({ feedback, cached: false })
   } catch (err) {
     // P2002: unique constraint — a concurrent request already created the row.

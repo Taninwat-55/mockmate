@@ -6,13 +6,17 @@ import { z } from "zod"
 
 import {
   prisma,
+  EmploymentType,
   InterviewSessionStatus,
   MessageRole,
   MessageType,
+  Seniority,
+  WorkSetting,
 } from "@mockmate/db"
 import { auth } from "@/auth"
 import { chatModel, outputLimits } from "@/lib/ai"
 import { buildInterviewMessages } from "@/lib/interviewer-prompt"
+import { toInterviewContext } from "@/lib/interview-context"
 import {
   acquireTurnLock,
   claimLlmCalls,
@@ -22,32 +26,35 @@ import { limitUser } from "@/lib/rate-limit"
 import { posthog } from "@/lib/posthog"
 
 // Server-side input caps (PRD §6). Resume and JD are each limited to 6,000 chars
-// to control token cost; the title is a short user-facing label.
+// to control token cost; the title (the role) is a short user-facing label.
 const MAX_INPUT_CHARS = 6000
 const MAX_TITLE_CHARS = 120
+
+function optionalText(label: string) {
+  return z
+    .string()
+    .trim()
+    .max(
+      MAX_INPUT_CHARS,
+      `${label} must be ${MAX_INPUT_CHARS.toLocaleString("en-US")} characters or fewer.`,
+    )
+    .optional()
+    .transform((value) => value || null)
+}
 
 const newInterviewSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(1, "Add a role or company so you can find this session later.")
+    .min(1, "Tell us which role you're interviewing for.")
     .max(MAX_TITLE_CHARS, `Title must be ${MAX_TITLE_CHARS} characters or fewer.`),
-  resume: z
-    .string()
-    .trim()
-    .min(1, "Paste your resume to give the interviewer context.")
-    .max(
-      MAX_INPUT_CHARS,
-      `Resume must be ${MAX_INPUT_CHARS.toLocaleString("en-US")} characters or fewer.`,
-    ),
-  jobDescription: z
-    .string()
-    .trim()
-    .min(1, "Paste the job description you're targeting.")
-    .max(
-      MAX_INPUT_CHARS,
-      `Job description must be ${MAX_INPUT_CHARS.toLocaleString("en-US")} characters or fewer.`,
-    ),
+  // Resume and job description are optional (#44) — first-timers often have
+  // neither. Blank input is stored as null.
+  resume: optionalText("Resume"),
+  jobDescription: optionalText("Job description"),
+  seniority: z.enum(Seniority),
+  workSetting: z.enum(WorkSetting).optional(),
+  employmentType: z.enum(EmploymentType).optional(),
   // The user's pick when they hold BOTH a credit and a free weekly session.
   // Ignored (and the entitlement decided automatically) when only one is
   // available. The server is authoritative — this is treated as intent, then
@@ -55,7 +62,7 @@ const newInterviewSchema = z.object({
   preferCredit: z.boolean().optional(),
 })
 
-export type NewInterviewInput = z.infer<typeof newInterviewSchema>
+export type NewInterviewInput = z.input<typeof newInterviewSchema>
 
 type ActionResult = { success: false; error: string }
 
@@ -152,6 +159,9 @@ export async function createInterviewSession(
           title: parsed.data.title,
           resume: parsed.data.resume,
           jobDescription: parsed.data.jobDescription,
+          seniority: parsed.data.seniority,
+          workSetting: parsed.data.workSetting,
+          employmentType: parsed.data.employmentType,
           isPaid: usePaid,
           // status defaults to IN_PROGRESS in the schema
         },
@@ -173,6 +183,7 @@ export async function createInterviewSession(
         session_id: interview.id,
         user_id: session.user.id,
         role_title: parsed.data.title,
+        seniority: parsed.data.seniority,
         tier: usePaid ? "paid" : "free",
       },
     })
@@ -227,6 +238,10 @@ export async function startInterview(
         id: true,
         status: true,
         isPaid: true,
+        title: true,
+        seniority: true,
+        workSetting: true,
+        employmentType: true,
         resume: true,
         jobDescription: true,
         questions: {
@@ -259,6 +274,7 @@ export async function startInterview(
       maxRetries: 2,
       ...outputLimits(model, 1000),
       messages: buildInterviewMessages({
+        context: toInterviewContext(interview),
         resume: interview.resume,
         jobDescription: interview.jobDescription,
         candidateName: session.user.name,

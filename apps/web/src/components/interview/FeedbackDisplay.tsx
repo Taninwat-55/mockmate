@@ -111,11 +111,11 @@ export function FeedbackDisplay({
 
       {/* Dimension cards */}
       <DimensionCard
-        title="Technical Accuracy"
-        score={feedback.technicalAccuracyScore}
-        strength={feedback.technicalAccuracyStrength}
-        weakness={feedback.technicalAccuracyWeakness}
-        tip={feedback.technicalAccuracyTip}
+        title="Role Knowledge"
+        score={feedback.roleKnowledgeScore}
+        strength={feedback.roleKnowledgeStrength}
+        weakness={feedback.roleKnowledgeWeakness}
+        tip={feedback.roleKnowledgeTip}
       />
       <DimensionCard
         title="Communication Clarity"
