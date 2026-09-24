@@ -11,7 +11,7 @@ import {
   MessageType,
 } from "@mockmate/db"
 import { auth } from "@/auth"
-import { chatModel } from "@/lib/ai"
+import { chatModel, outputLimits } from "@/lib/ai"
 import { buildInterviewMessages } from "@/lib/interviewer-prompt"
 import {
   acquireTurnLock,
@@ -253,10 +253,11 @@ export async function startInterview(
       return { success: false, error: "This interview has reached its limit." }
     }
 
+    const model = chatModel(interview.isPaid)
     const { text } = await generateText({
-      model: chatModel(interview.isPaid),
+      model,
       maxRetries: 2,
-      maxOutputTokens: 1000,
+      ...outputLimits(model, 1000),
       messages: buildInterviewMessages({
         resume: interview.resume,
         jobDescription: interview.jobDescription,
