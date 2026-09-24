@@ -113,6 +113,26 @@ enum OverallSignal {
   STRONG_HIRE
 }
 
+// Interview context (#44) — picked on the setup form, used to calibrate prompts.
+enum Seniority {
+  STUDENT    // student / intern
+  ENTRY      // first job
+  JUNIOR     // 1–2 years
+  MID_SENIOR
+}
+
+enum WorkSetting {
+  ONSITE
+  HYBRID
+  REMOTE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+}
+
 // ============================================================
 // APP MODELS
 // ============================================================
@@ -121,9 +141,12 @@ model InterviewSession {
   id                String                 @id @default(cuid())
   userId            String
   status            InterviewSessionStatus @default(IN_PROGRESS)
-  title             String                 // User-provided label, e.g. "Frontend Engineer at Spotify"
-  jobDescription    String                 @db.Text
-  resume            String                 @db.Text
+  title             String                 // User-provided role, e.g. "Barista at Espresso House"
+  jobDescription    String?                @db.Text // optional (#44)
+  resume            String?                @db.Text // optional (#44)
+  seniority         Seniority              @default(JUNIOR)
+  workSetting       WorkSetting?
+  employmentType    EmploymentType?
   mainQuestionCount Int                    @default(0)
   isPaid            Boolean                @default(false) // true = paid (credit) session → Pro models, email report, no history cap (#16)
   llmCallCount      Int                    @default(0)     // hard lifetime budget of AI calls for this session — see lib/ai-guard.ts
@@ -177,11 +200,11 @@ model Feedback {
   id                 String @id @default(cuid())
   interviewSessionId String @unique // one feedback per session
 
-  // Technical Accuracy dimension
-  technicalAccuracyScore    Int
-  technicalAccuracyStrength String @db.Text
-  technicalAccuracyWeakness String @db.Text
-  technicalAccuracyTip      String @db.Text
+  // Role Knowledge dimension (was technicalAccuracy*, renamed in #44)
+  roleKnowledgeScore    Int
+  roleKnowledgeStrength String @db.Text
+  roleKnowledgeWeakness String @db.Text
+  roleKnowledgeTip      String @db.Text
 
   // Communication Clarity dimension
   communicationClarityScore    Int
