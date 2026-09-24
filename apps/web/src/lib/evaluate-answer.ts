@@ -1,6 +1,6 @@
 import { generateObject } from "ai"
 
-import { gradingModel } from "@/lib/ai"
+import { gradingModel, outputLimits } from "@/lib/ai"
 import { evaluationNoteSchema, type EvaluationNote } from "@/types/interview"
 import type { InterviewTurn } from "@/types/interview"
 
@@ -34,11 +34,12 @@ export async function generateEvaluationNote({
     )
     .join("\n\n")
 
+  const model = gradingModel(isPaid)
   const { object } = await generateObject({
-    model: gradingModel(isPaid),
+    model,
     schema: evaluationNoteSchema,
     maxRetries: 2,
-    maxOutputTokens: 800,
+    ...outputLimits(model, 800),
     system: EVALUATION_SYSTEM_PROMPT,
     messages: [
       {
