@@ -5,12 +5,20 @@ import Link from "next/link"
 import { FileUp } from "lucide-react"
 import { toast } from "sonner"
 
+import type { EmploymentType, Seniority, WorkSetting } from "@mockmate/db"
+
 import { updateSavedResume } from "@/actions/account"
 import { createInterviewSession } from "@/actions/interview"
 import { extractPdfText } from "@/lib/parse-pdf"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { ChipGroup } from "@/components/interview/ChipGroup"
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  SENIORITY_LABELS,
+  WORK_SETTING_LABELS,
+} from "@/types/interview"
 
 const MAX_INPUT_CHARS = 6000
 // Guard against a huge PDF locking up the tab — parsing happens in the browser.
@@ -19,6 +27,16 @@ const MAX_PDF_BYTES = 10 * 1024 * 1024 // 10 MB
 // Fixed locale so the server and client render the same separator (otherwise the
 // thousands separator differs by locale and React reports a hydration mismatch).
 const formatCount = (n: number) => n.toLocaleString("en-US")
+
+// Tap-to-fill examples that show the interview isn't only for tech roles (#44).
+const EXAMPLE_ROLES = [
+  "Barista",
+  "Nurse",
+  "Sales Assistant",
+  "Customer Support",
+  "Warehouse Worker",
+  "Frontend Developer",
+]
 
 function CharCount({ value }: { value: string }) {
   const over = value.length > MAX_INPUT_CHARS
@@ -51,6 +69,9 @@ export function NewInterviewForm({
   isOwner,
 }: NewInterviewFormProps) {
   const [title, setTitle] = useState("")
+  const [seniority, setSeniority] = useState<Seniority>("JUNIOR")
+  const [workSetting, setWorkSetting] = useState<WorkSetting>()
+  const [employmentType, setEmploymentType] = useState<EmploymentType>()
   const [resume, setResume] = useState(savedResume)
   const [jobDescription, setJobDescription] = useState("")
   const [isParsing, setIsParsing] = useState(false)
@@ -124,6 +145,9 @@ export function NewInterviewForm({
     startTransition(async () => {
       const result = await createInterviewSession({
         title,
+        seniority,
+        workSetting,
+        employmentType,
         resume,
         jobDescription,
         // Only meaningful when both are available; otherwise the server decides.
@@ -140,13 +164,58 @@ export function NewInterviewForm({
     <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-6 text-left">
       <div className="space-y-2">
         <label htmlFor="title" className="text-sm font-medium">
-          Role / Company
+          What role are you interviewing for?
         </label>
         <Input
           id="title"
-          placeholder="Frontend Engineer at Spotify"
+          placeholder="Type any role, e.g. Barista at Espresso House"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          disabled={busy}
+        />
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_ROLES.map((role) => (
+            <Button
+              key={role}
+              type="button"
+              size="xs"
+              variant="ghost"
+              className="rounded-full text-muted-foreground"
+              disabled={busy}
+              onClick={() => setTitle(role)}
+            >
+              {role}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <ChipGroup
+        label="Your level"
+        hint="We adjust the questions to your level."
+        options={SENIORITY_LABELS}
+        value={seniority}
+        onChange={(value) => value && setSeniority(value)}
+        disabled={busy}
+      />
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <ChipGroup
+          label="Work setting"
+          hint="Optional"
+          options={WORK_SETTING_LABELS}
+          value={workSetting}
+          onChange={setWorkSetting}
+          allowDeselect
+          disabled={busy}
+        />
+        <ChipGroup
+          label="Employment type"
+          hint="Optional"
+          options={EMPLOYMENT_TYPE_LABELS}
+          value={employmentType}
+          onChange={setEmploymentType}
+          allowDeselect
           disabled={busy}
         />
       </div>
@@ -154,7 +223,10 @@ export function NewInterviewForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <label htmlFor="resume" className="text-sm font-medium">
-            Your resume
+            Your resume{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional, makes the questions sharper)
+            </span>
           </label>
           <div className="flex items-center gap-3">
             <CharCount value={resume} />
@@ -195,13 +267,16 @@ export function NewInterviewForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label htmlFor="jobDescription" className="text-sm font-medium">
-            Job description
+            Job posting{" "}
+            <span className="font-normal text-muted-foreground">
+              (optional, makes the questions sharper)
+            </span>
           </label>
           <CharCount value={jobDescription} />
         </div>
         <Textarea
           id="jobDescription"
-          placeholder="Paste the job description you're targeting…"
+          placeholder="Paste the job ad you're applying for…"
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
           disabled={busy}

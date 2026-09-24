@@ -1,26 +1,27 @@
 # MockMate
 
-> MockMate is an AI-powered mock-interview tool that runs a realistic, multi-turn technical interview tailored to the job you're targeting, then grades you like a hiring panel.
+> MockMate is an AI-powered mock-interview tool that runs a realistic, multi-turn interview for any role, tailored to your level and the job you're targeting, then grades you like a hiring manager.
 
-MockMate helps developers and job seekers practice technical interviews. Most people fail not because they lack knowledge, but because they freeze under pressure — and static prep (question banks, videos) can't follow up on a weak answer or push back on a vague one. MockMate simulates the real dynamic: an interviewer that asks role-specific questions, challenges shallow answers, and holds you accountable.
+MockMate helps job seekers in any field practice interviews, especially students, first-time job seekers and juniors. Most people fail not because they lack ability, but because they freeze under pressure — and static prep (question lists, videos) can't follow up on a weak answer or push back on a vague one. MockMate simulates the real dynamic: an interviewer that asks role-specific questions, challenges shallow answers, and holds you accountable.
 
 ## How it works
 
-- You paste the job description you're targeting and your résumé as plain text.
-- An AI interviewer asks five technical questions derived from that specific role.
+- You type the role you're interviewing for and pick your level (Student / Intern, Entry-level, Junior, Mid / Senior), plus optionally work setting and employment type.
+- Optionally, you paste the job posting and your résumé as plain text to make the questions sharper.
+- An AI interviewer asks five questions for that role: motivation, behavioral, situational and role knowledge.
 - It follows up to two times per question, challenging vague or incomplete answers.
-- At the end it returns a graded report across three dimensions — Technical Accuracy, Communication Clarity, and Problem-solving Approach (each scored 1–5) — plus a Strong Hire / Hire / No Hire signal and a short summary.
+- At the end it returns a graded report across three dimensions — Role Knowledge, Communication Clarity, and Problem-solving Approach (each scored 1–5) — plus a Strong Hire / Hire / No Hire signal and a short summary.
 
 ## Who it's for
 
-Developers and career changers, typically junior to mid-level, preparing for a technical interview at a company they want to work at. The text-first format also lowers the barrier for non-native English speakers.
+Anyone preparing for a job interview, in any field — from café and retail to healthcare, office work and tech — and especially people heading into their first interviews. The text-first format also lowers the barrier for non-native English speakers.
 
 ## Key facts
 
 - Runs entirely in the browser; nothing to install. Text-first (no audio/video).
-- Questions are derived from the user's pasted job description, not a static question bank.
+- Questions are tailored to the role and level, and to the job posting when one is pasted — not a static question bank.
 - A session is exactly five main questions, with up to two follow-ups each.
-- Pricing (pay-per-session, no subscription): Free session weekly; single session 25 DKK; 5-session pack 99 DKK.
+- Pricing (pay-per-session, no subscription): one free session every week; single session 19 DKK; 5-session pack 79 DKK.
 - Sign-in is via Google.
 
 ## Links

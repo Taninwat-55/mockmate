@@ -1,5 +1,41 @@
 import { z } from "zod"
 
+// Type-only: the label maps below are used by the (client) setup form, which must
+// not pull the Prisma client into the browser bundle.
+import type { EmploymentType, Seniority, WorkSetting } from "@mockmate/db"
+
+// ============================================================
+// Interview context (#44) — role, level, work setting, employment type
+// ============================================================
+// Labels shared by the setup form (chips) and the prompts, so the wording the
+// candidate picks is the wording the interviewer sees.
+export const SENIORITY_LABELS: Record<Seniority, string> = {
+  STUDENT: "Student / Intern",
+  ENTRY: "Entry-level (first job)",
+  JUNIOR: "Junior (1–2 yrs)",
+  MID_SENIOR: "Mid / Senior",
+}
+
+export const WORK_SETTING_LABELS: Record<WorkSetting, string> = {
+  ONSITE: "On-site",
+  HYBRID: "Hybrid",
+  REMOTE: "Remote",
+}
+
+export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
+  FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
+  INTERNSHIP: "Internship",
+}
+
+// What every prompt needs to know about the interview it is running.
+export type InterviewContext = {
+  role: string
+  seniority: Seniority
+  workSetting?: WorkSetting | null
+  employmentType?: EmploymentType | null
+}
+
 // ============================================================
 // Hidden evaluation note (PRD §6 — "Evaluation logging")
 // ============================================================
@@ -14,12 +50,20 @@ export const evaluationNoteSchema = z.object({
   // One or two private sentences summarising how the question went.
   summary: z.string().min(1),
   // Per-dimension observations (PRD §5 grading rubric). Kept short; private.
-  technicalSignal: z.string().min(1),
+  // `roleSignal` was `technicalSignal` before #44 — see `parseEvaluationNote`.
+  roleSignal: z.string().min(1),
   communicationSignal: z.string().min(1),
   problemSolvingSignal: z.string().min(1),
 })
 
 export type EvaluationNote = z.infer<typeof evaluationNoteSchema>
+
+// Parse a stored note. Notes written before #44 carry `technicalSignal`; map it
+// to `roleSignal` so sessions that straddled the deploy still grade.
+export function parseEvaluationNote(raw: string): EvaluationNote {
+  const { technicalSignal, ...rest } = JSON.parse(raw) as Record<string, unknown>
+  return evaluationNoteSchema.parse({ roleSignal: technicalSignal, ...rest })
+}
 
 // ============================================================
 // Interview state machine (PRD §6 — counting / follow-up / unresolved)
@@ -36,8 +80,8 @@ export type InterviewAction =
   | "END_SESSION"
 
 // Result of assessing a single answer. `tooShort` is deterministic (word count);
-// `isWeak` combines `tooShort` with the LLM's semantic judgment (vague / no relevant
-// technical concept, PRD §6).
+// `isWeak` combines `tooShort` with the LLM's semantic judgment (vague / no
+// role-relevant substance, PRD §6).
 export type AnswerAssessment = {
   wordCount: number
   tooShort: boolean

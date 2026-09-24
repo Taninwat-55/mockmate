@@ -8,10 +8,10 @@ type EmailRow = {
   title: string
   email: string
   name: string | null
-  technicalAccuracyScore: number
-  technicalAccuracyStrength: string
-  technicalAccuracyWeakness: string
-  technicalAccuracyTip: string
+  roleKnowledgeScore: number
+  roleKnowledgeStrength: string
+  roleKnowledgeWeakness: string
+  roleKnowledgeTip: string
   communicationClarityScore: number
   communicationClarityStrength: string
   communicationClarityWeakness: string
@@ -95,7 +95,7 @@ function buildEmailHtml(row: EmailRow): string {
           </div>
 
           <p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#111827;">Dimension Breakdown</p>
-          ${dimensionBlock('Technical Accuracy', row.technicalAccuracyScore, row.technicalAccuracyStrength, row.technicalAccuracyWeakness, row.technicalAccuracyTip)}
+          ${dimensionBlock('Role Knowledge', row.roleKnowledgeScore, row.roleKnowledgeStrength, row.roleKnowledgeWeakness, row.roleKnowledgeTip)}
           ${dimensionBlock('Communication Clarity', row.communicationClarityScore, row.communicationClarityStrength, row.communicationClarityWeakness, row.communicationClarityTip)}
           ${dimensionBlock('Problem Solving', row.problemSolvingScore, row.problemSolvingStrength, row.problemSolvingWeakness, row.problemSolvingTip)}
 
@@ -129,8 +129,8 @@ export const handler: Handler<{ sessionId: string }, void> = async (event) => {
         i.title,
         u.email,
         u.name,
-        f."technicalAccuracyScore",    f."technicalAccuracyStrength",
-        f."technicalAccuracyWeakness", f."technicalAccuracyTip",
+        f."roleKnowledgeScore",    f."roleKnowledgeStrength",
+        f."roleKnowledgeWeakness", f."roleKnowledgeTip",
         f."communicationClarityScore", f."communicationClarityStrength",
         f."communicationClarityWeakness", f."communicationClarityTip",
         f."problemSolvingScore",       f."problemSolvingStrength",
