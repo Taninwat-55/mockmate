@@ -8,15 +8,25 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#44 Any-role support + interview context options** — branch `feature/any-role-support`.
-  Scope: role + level (+ optional work setting / employment type) on the setup form;
-  CV and job posting optional; role-neutral prompts calibrated by level; Feedback
-  `technicalAccuracy*` → `roleKnowledge*` (rename migration, no data loss); copy + PRD.
-  Acceptance: see issue #44.
+- **#54 Email via Resend, remove AWS Lambda** — branch `feature/resend-email`.
+  Scope: send the paid-session summary email from the feedback route with `after()`
+  via Resend's HTTP API (`lib/session-summary-email.ts`, HTML-escaped); delete
+  `lambda/`, `invoke-email-lambda.ts`, `@aws-sdk/client-lambda`, AWS env entries.
 
 ---
 
 ## History
+
+- 2026-09-24  Any-role support + interview context options (#44, PR #53): role with
+  example chips, seniority / work setting / employment type chips, CV + job posting
+  optional; role-neutral prompts calibrated by level (`lib/interview-context.ts`);
+  Feedback `technicalAccuracy*` → `roleKnowledge*` via hand-written RENAME migration;
+  fixed evaluation notes leaking into interviewer replies; copy + PRD repositioned.
+  Verified on a Neon `dev` branch (barista / nurse / frontend). Remaining: prod
+  migration at release.  ✓
+
+- 2026-09-24  Hotfix (#48, PR #49, released in #51): Gemini thinking tokens were
+  truncating AI output under the #42 caps; `outputLimits()` bounds thinking per call.  ✓
 
 - 2026-06-13  Pay-per-use billing + per-session model tiering (#16): credit model on
   `User` (`creditBalance`, `freeSessionRefreshAt`, `isOwner`) + `InterviewSession.isPaid`

@@ -28,7 +28,7 @@ This model suits the job-seeker use case: users burst-use the product during an 
 
 **Free tier:** Users get 1 free session every 7 days, no card required. The cadence is long enough that it doesn't compete with the 25 DKK single session — active job seekers applying to multiple roles will want more than one session per week and will pay. Free users can see only their last 3 sessions in the dashboard history.
 
-**Paid perks (both tiers):** After each paid session the existing AWS Lambda / Resend pipeline emails the full feedback report to the user. Free users get the web report only. This requires no new infrastructure — the Lambda already fires on session completion; it just needs to check whether the session was paid.
+**Paid perks (both tiers):** After each paid session the full feedback report is emailed to the user via Resend (sent from the feedback route with `after()`; the AWS Lambda was removed in #54). Free users get the web report only.
 
 **5-session pack only:** Full session history visible on the dashboard (no 3-session cap).
 
@@ -78,7 +78,7 @@ else:
 
 The credit deduction and `InterviewSession` creation must happen inside a **Prisma transaction** to prevent race conditions where two concurrent requests could both pass the balance check before either deducts.
 
-`isPaid` on `InterviewSession` now drives three things: (1) whether the Lambda emails the feedback report (free sessions skip it), (2) the dashboard history cap, and (3) **model selection** — paid sessions use the Pro-tier models from the §2 matrix, free sessions use 2.5 Flash. It is set once at creation and never changes.
+`isPaid` on `InterviewSession` now drives three things: (1) whether the feedback report is emailed (free sessions skip it), (2) the dashboard history cap, and (3) **model selection** — paid sessions use the Pro-tier models from the §2 matrix, free sessions use 2.5 Flash. It is set once at creation and never changes.
 
 ### 3a. Credit refund on abandonment
 
@@ -161,7 +161,7 @@ Drop the `subscriptionStatus` field from `User` **and** the `SubscriptionStatus`
 isPaid  Boolean  @default(false)
 ```
 
-Used to gate the post-session email Lambda, to enforce the history cap (free users see only their 3 most recent sessions on the dashboard; paid sessions are always visible), and to **select the AI model tier** (§2 matrix).
+Used to gate the post-session email, to enforce the history cap (free users see only their 3 most recent sessions on the dashboard; paid sessions are always visible), and to **select the AI model tier** (§2 matrix).
 
 ### New model: `CreditPurchase`
 
