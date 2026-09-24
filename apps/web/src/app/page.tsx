@@ -64,8 +64,9 @@ export default async function Home() {
               </h1>
               <p className="mt-7 max-w-[46ch] text-[17px] leading-relaxed text-muted-foreground">
                 You know the material. You just blank when someone&apos;s watching.
-                MockMate runs a real technical interview tailored to the exact job
-                you&apos;re chasing — then grades you like a hiring panel would.
+                MockMate runs a realistic interview for the exact job you&apos;re
+                chasing, from barista to nurse to developer — then grades you like a
+                hiring manager would.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
                 <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">
@@ -87,7 +88,7 @@ export default async function Home() {
                   <div className="flex items-center gap-2">
                     <span className="inline-block size-2.5 shrink-0 rotate-45 border border-foreground" />
                     <span className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                      Frontend Engineer
+                      Barista · Entry-level
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5">
@@ -112,18 +113,16 @@ export default async function Home() {
                       </span>
                     </div>
                     <div className="rounded-lg border border-foreground bg-foreground/[0.02] p-4 text-[15px] leading-relaxed">
-                      You mentioned a composite index on{" "}
-                      <span className="font-mono text-[13.5px]">(org_id, created_at)</span>.
-                      {" "}How did you choose that column order, and what was the measured
-                      impact on p95 latency?
+                      You said you stayed calm during the lunch rush. What exactly did you
+                      do when the queue reached the door and a customer complained about
+                      the wait?
                     </div>
                   </div>
                   <div className="rounded-lg border border-border bg-muted/60 p-4">
                     <p className="text-[14.5px] leading-relaxed text-foreground/80">
-                      The order matters because every query filters by{" "}
-                      <span className="font-mono text-[12.5px]">org_id</span> first, then
-                      range-scans <span className="font-mono text-[12.5px]">created_at</span>
-                      {" "}— so leading with org_id lets the index seek straight to the tenant
+                      First I apologised and told her roughly how long it would be. Then I
+                      asked my colleague to take orders while I stayed on the machine, so the
+                      line kept moving
                       <span className="ml-0.5 inline-block h-[1.1em] w-[2px] translate-y-[2px] animate-pulse bg-foreground" />
                     </p>
                     <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
@@ -151,17 +150,17 @@ export default async function Home() {
               </h2>
               <p className="mt-6 text-[17px] leading-relaxed text-muted-foreground">
                 MockMate is an AI-powered mock-interview tool that runs a realistic,
-                multi-turn technical interview tailored to a specific job description, then
-                grades you like a hiring panel would. You paste the job you&apos;re targeting
-                and your résumé as plain text; MockMate asks five questions — with up to two
-                follow-ups each — and challenges vague answers the way a real interviewer does.
+                multi-turn interview for any role, tailored to your level and, if you have
+                them, the job posting and your résumé. MockMate asks five questions — with up
+                to two follow-ups each — and challenges vague answers the way a real
+                interviewer does.
               </p>
               <p className="mt-5 text-[17px] leading-relaxed text-muted-foreground">
                 When the session ends, you get a graded report across three dimensions —
-                Technical Accuracy, Communication Clarity, and Problem-solving Approach — and a
+                Role Knowledge, Communication Clarity, and Problem-solving Approach — and a
                 clear Strong&nbsp;Hire / Hire / No&nbsp;Hire signal. It runs entirely in your
-                browser, is text-first, and is built for developers and career changers
-                preparing for technical interviews.
+                browser, is text-first, and is built for anyone preparing for an interview,
+                especially their first one.
               </p>
             </div>
           </div>
@@ -200,12 +199,12 @@ export default async function Home() {
                   It interviews you for the job you actually want.
                 </h2>
                 <p className="mt-6 max-w-[44ch] text-[16.5px] leading-relaxed text-muted-foreground">
-                  Generic prep throws random puzzles at you. MockMate reads your target job
-                  description and asks the questions that role really tests — the systems,
-                  the trade-offs, and the depth that hiring manager cares about.
+                  Generic prep throws the same list of questions at everyone. MockMate
+                  reads your target role and job posting and asks what that hiring manager
+                  really cares about, pitched at your level.
                 </p>
                 <p className="mt-5 max-w-[44ch] text-[16.5px] leading-relaxed text-muted-foreground">
-                  No LeetCode grind. Just the pressure you&apos;re about to face, rehearsed.
+                  No memorised answers. Just the pressure you&apos;re about to face, rehearsed.
                 </p>
               </div>
 
@@ -216,13 +215,13 @@ export default async function Home() {
                     The job description
                   </p>
                   <p className="text-[13.5px] leading-[1.7] text-muted-foreground">
-                    …own our{" "}
-                    <mark className="bg-foreground/10 px-1 text-foreground">high-throughput event pipeline</mark>
-                    , keep{" "}
-                    <mark className="bg-foreground/10 px-1 text-foreground">p95 latency under 200ms</mark>
-                    , and ship in{" "}
-                    <mark className="bg-foreground/10 px-1 text-foreground">React + TypeScript</mark>
-                    {" "}across the dashboard…
+                    …serve customers in a{" "}
+                    <mark className="bg-foreground/10 px-1 text-foreground">busy city-centre café</mark>
+                    , keep the{" "}
+                    <mark className="bg-foreground/10 px-1 text-foreground">queue moving at peak hours</mark>
+                    , and{" "}
+                    <mark className="bg-foreground/10 px-1 text-foreground">work early weekend shifts</mark>
+                    …
                   </p>
                 </div>
                 <div className="flex justify-center sm:flex-col">
@@ -235,16 +234,15 @@ export default async function Home() {
                   <ul className="space-y-3 text-[13.5px] leading-snug">
                     <li className="flex gap-2.5">
                       <span className="mt-1 inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
-                      How would you keep p95 under 200ms as the event pipeline scales 10×?
+                      The line is out the door and the card machine stops working. What do you do?
                     </li>
                     <li className="flex gap-2.5">
                       <span className="mt-1 inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
-                      Walk me through backpressure handling when a downstream consumer stalls.
+                      Tell me about a time you dealt with someone who was upset. How did it end?
                     </li>
                     <li className="flex gap-2.5">
                       <span className="mt-1 inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
-                      Where would you reach for TypeScript generics in the dashboard, and where
-                      wouldn&apos;t you?
+                      Our shifts start at 6:30 on weekends. How would that fit your week?
                     </li>
                   </ul>
                 </div>
@@ -266,7 +264,7 @@ export default async function Home() {
             <div className="reveal mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04),0_24px_60px_-24px_rgba(0,0,0,0.18)]">
               <div className="border-b border-border px-8 py-10 text-center">
                 <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Interview report</p>
-                <p className="mt-1.5 text-[15px] font-medium tracking-[-0.01em]">Frontend Engineer · Spotify</p>
+                <p className="mt-1.5 text-[15px] font-medium tracking-[-0.01em]">Barista · Entry-level</p>
                 <div className="mt-6 inline-flex items-center gap-2.5 whitespace-nowrap rounded-lg bg-primary px-6 py-3.5 text-primary-foreground">
                   <span className="inline-block size-3 shrink-0 rotate-45 border-[1.5px] border-primary-foreground" />
                   <span className="font-mono text-[22px] font-semibold tracking-[0.02em]">STRONG HIRE</span>
@@ -276,13 +274,13 @@ export default async function Home() {
                   <span className="text-faint">/ 5 overall</span>
                 </div>
                 <p className="mx-auto mt-5 max-w-[52ch] text-[14.5px] leading-relaxed text-muted-foreground">
-                  Strong systems-design instincts, explained trade-offs clearly under pressure,
-                  and went deep on follow-ups without losing the thread. Exactly the depth this
-                  bar calls for.
+                  Stayed calm under pressure, gave real examples from school and a summer job,
+                  and handled the upset-customer follow-up with care. Exactly what this role
+                  calls for.
                 </p>
               </div>
               <div className="divide-y divide-border">
-                <ScoreRow label="Technical Accuracy" score={5} />
+                <ScoreRow label="Role Knowledge" score={5} />
                 <ScoreRow label="Communication Clarity" score={4} />
                 <ScoreRow label="Problem-solving Approach" score={5} />
               </div>
@@ -458,13 +456,13 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
 const steps = [
   {
     n: 1,
-    title: "Paste the job",
-    body: "Drop in the job description you're targeting, plus your résumé as plain text. That's the entire setup.",
+    title: "Pick your role",
+    body: "Type the role and pick your level. Add the job posting and your résumé if you have them. That's the entire setup.",
   },
   {
     n: 2,
     title: "Sit the interview",
-    body: "A live AI interviewer asks five technical questions — and digs in with up to two follow-ups each, exactly like a real panel.",
+    body: "A live AI interviewer asks five questions for that role — and digs in with up to two follow-ups each, exactly like a real panel.",
   },
   {
     n: 3,
@@ -476,19 +474,19 @@ const steps = [
 const faqs = [
   {
     q: "How long does an interview take?",
-    a: "About fifteen minutes. Five technical questions, with up to two follow-ups each — enough to feel like the real thing without eating your evening.",
+    a: "About fifteen minutes. Five questions, with up to two follow-ups each — enough to feel like the real thing without eating your evening.",
   },
   {
     q: "What kind of questions will I get?",
-    a: "Questions are derived from the specific job description you paste — the systems, trade-offs, and technologies that role actually tests. Not a random LeetCode set.",
+    a: "A mix of what real interviewers ask: why you want the job, times you handled something, what you'd do in a tricky situation, and role knowledge. Pitched at your level and, if you paste one, the job posting.",
   },
   {
     q: "What is the hiring signal based on?",
-    a: "Three dimensions, each scored 1–5: Technical Accuracy, Communication Clarity, and Problem-solving Approach. Together they roll up into a Strong Hire / Hire / No Hire signal.",
+    a: "Three dimensions, each scored 1–5: Role Knowledge, Communication Clarity, and Problem-solving Approach. Together they roll up into a Strong Hire / Hire / No Hire signal.",
   },
   {
     q: "Do I need to install anything?",
-    a: "No. MockMate runs entirely in your browser. Paste your résumé and a job description, and you're in the interview.",
+    a: "No. MockMate runs entirely in your browser. Type your role, pick your level, and you're in the interview.",
   },
   {
     q: "Can I retake an interview?",
@@ -496,6 +494,6 @@ const faqs = [
   },
   {
     q: "Does it work for non-technical roles?",
-    a: "MockMate is built for technical interviews today. If the job description is technical, it'll ask the right questions for it.",
+    a: "Yes. MockMate works for any role, from café and retail to healthcare, office jobs and tech. It's built especially for people heading into their first interviews.",
   },
 ]

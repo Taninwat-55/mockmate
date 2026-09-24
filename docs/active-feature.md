@@ -8,7 +8,11 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Nothing in flight — pick the next issue from the board (Ready column)._
+- **#44 Any-role support + interview context options** — branch `feature/any-role-support`.
+  Scope: role + level (+ optional work setting / employment type) on the setup form;
+  CV and job posting optional; role-neutral prompts calibrated by level; Feedback
+  `technicalAccuracy*` → `roleKnowledge*` (rename migration, no data loss); copy + PRD.
+  Acceptance: see issue #44.
 
 ---
 
