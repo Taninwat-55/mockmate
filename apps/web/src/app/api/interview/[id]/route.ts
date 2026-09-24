@@ -8,7 +8,7 @@ import {
   MessageType,
 } from "@mockmate/db"
 import { auth } from "@/auth"
-import { chatModel } from "@/lib/ai"
+import { chatModel, outputLimits } from "@/lib/ai"
 import {
   INTERVIEWER_SYSTEM_PROMPT,
   buildContextMessage,
@@ -267,7 +267,8 @@ export async function POST(
     }
 
     sessionStatus = action === "END_SESSION" ? "COMPLETED" : "IN_PROGRESS"
-  } catch {
+  } catch (err) {
+    console.error("[interview-turn] judge failed:", err)
     await releaseTurnLock(id)
     return Response.json(
       {
@@ -278,10 +279,11 @@ export async function POST(
     )
   }
 
+  const model = chatModel(interview.isPaid)
   const result = streamText({
-    model: chatModel(interview.isPaid),
+    model,
     maxRetries: 2,
-    maxOutputTokens: 1000,
+    ...outputLimits(model, 1000),
     onError: () => {
       // The stream failed mid-flight, so `onFinish` will not run and the lock
       // would otherwise sit until it expires.

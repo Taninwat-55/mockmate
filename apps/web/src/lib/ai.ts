@@ -23,3 +23,31 @@ export function chatModel(isPaid: boolean) {
 export function gradingModel(isPaid: boolean) {
   return isPaid ? PRO_GRADING : FREE_GRADING
 }
+
+// Output limits for one call (#48). Gemini "thinks" before it answers, and those
+// hidden tokens count against `maxOutputTokens` — a bare cap lets thinking eat the
+// whole budget and truncate the answer. So every call bounds thinking explicitly
+// and gets a cap of thinking headroom + the tokens its answer needs: the answer
+// always fits, and spend per call stays capped (#42).
+// - "light": latency-sensitive calls (chat, judge, per-question note)
+// - "deep":  the end-of-session grading matrix, where quality shows most
+const THINKING = {
+  light: { budget: 512, level: "low", headroom: 1024 },
+  deep: { budget: 2048, level: "medium", headroom: 4096 },
+} as const
+
+export function outputLimits(
+  model: ReturnType<typeof google>,
+  answerTokens: number,
+  depth: keyof typeof THINKING = "light",
+) {
+  const { budget, level, headroom } = THINKING[depth]
+  // Gemini 3.x takes a thinking level; 2.5 takes a token budget (Pro's minimum is 128).
+  const thinkingConfig = model.modelId.startsWith("gemini-3")
+    ? { thinkingLevel: level }
+    : { thinkingBudget: budget }
+  return {
+    maxOutputTokens: headroom + answerTokens,
+    providerOptions: { google: { thinkingConfig } },
+  }
+}

@@ -1,7 +1,7 @@
 import { generateObject } from "ai"
 import { z } from "zod"
 
-import { chatModel } from "@/lib/ai"
+import { chatModel, outputLimits } from "@/lib/ai"
 import type { InterviewTurn } from "@/types/interview"
 
 // Per-answer weakness verdict (PRD §6 "vague, or fails to mention any technical
@@ -40,12 +40,13 @@ export async function judgeAnswerWeak({
     )
     .join("\n\n")
 
+  const model = chatModel(isPaid)
   const { object } = await generateObject({
-    model: chatModel(isPaid),
+    model,
     schema: judgeSchema,
     system: JUDGE_SYSTEM_PROMPT,
     maxRetries: 2,
-    maxOutputTokens: 300,
+    ...outputLimits(model, 300),
     messages: [
       {
         role: "user",
