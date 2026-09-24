@@ -102,7 +102,15 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 **Database workflow (phased — we are in phase 2 as of #29)**
 1. **Phase 1 (done — local prototyping):** `pnpm db:push` — fast schema iteration, no migration files while the schema was still churning and there was no real data.
 2. **Phase 2 (now):** `pnpm db:migrate` (`migrate dev`) — schema changes are version-controlled history. History was baselined at `0_init` (the pre-#29 schema) and the first real migration is `add_saved_resume`. Run `prisma migrate status` before committing to confirm sync.
-3. **Production:** `prisma migrate deploy` runs before the app starts.
+3. **Production:** migrations are **not** applied automatically (the Vercel build does not run them). Release steps for a release that contains a migration:
+   1. Create a Neon backup branch of `production` (e.g. `backup-pre-vX.Y.Z`, set to expire in 1 day).
+   2. Put the production `DATABASE_URL` in `apps/web/.env.production.local` (gitignored), run `prisma migrate status`, then `prisma migrate deploy` from `packages/db` with that URL exported.
+   3. Immediately merge the release PR `develop` → `main` (**merge commit, not squash**, so the branches stay connected).
+   4. Smoke test on mockmate.space, tag the release (`vX.Y.Z`), delete `.env.production.local`.
+
+**Databases (Neon branches):** `production` backs the live site only (Vercel Production `DATABASE_URL`). `dev` backs local development (`apps/web/.env.local`) **and** Vercel Preview deployments. Never point local or preview at `production`.
+
+`prisma migrate dev` is interactive and fails in non-interactive shells. There, write the migration SQL by hand (`migrations/<timestamp>_<name>/migration.sql`) and apply it with `migrate deploy`. Always hand-write renames as `RENAME COLUMN` — Prisma's generated SQL drops and re-adds the column, losing data.
 
 **Code quality**
 - ESLint enforces no-unused and similar — fix warnings, don't suppress them. Avoid leaving commented-out code. Keep functions and components small and focused.
