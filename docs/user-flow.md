@@ -108,9 +108,8 @@ flowchart TD
     C -- User ends early --> D
     C -- Tab closed or\nconnection lost --> E[Session stays\nIN_PROGRESS in DB]
 
-    D --> F[AWS Lambda triggered\nasync, non-blocking]
-    F --> G[LLM generates\nsummary email]
-    G --> H[Summary email sent\nto user]
+    D --> F[Paid session: summary email\nscheduled with after()]
+    F --> H[Summary email sent\nto user via Resend]
 
     E --> I{Does user\nreturn?}
     I -- Returns within 24h --> J[Login triggers\nsession check]
@@ -126,7 +125,7 @@ flowchart TD
 ```
 
 **Key design decisions visible in this flow:**
-- Lambda is triggered only on `COMPLETED` sessions — it sends a post-session summary email. This is an async, non-blocking operation. The feedback page loads immediately; the email arrives separately.
+- The summary email is sent only for paid `COMPLETED` sessions, via Resend from the feedback route (`after()`). This is an async, non-blocking operation. The feedback page loads immediately; the email arrives separately.
 - The Vercel Cron job does not delete sessions — it only flips the status. Abandoned sessions remain in history so the user can see the partial record.
 - There is no server-sent event or WebSocket involved in the resume flow. On login, the Next.js dashboard page queries the DB for `IN_PROGRESS` sessions and conditionally renders the banner. Simple request-response is sufficient.
 

@@ -1,7 +1,8 @@
+import { after } from "next/server"
 import { Prisma, prisma, InterviewSessionStatus } from "@mockmate/db"
 import { auth } from "@/auth"
 import { generateFeedback } from "@/lib/generate-feedback"
-import { invokeEmailLambda } from "@/lib/invoke-email-lambda"
+import { sendSessionSummaryEmail } from "@/lib/session-summary-email"
 import {
   acquireTurnLock,
   claimLlmCalls,
@@ -116,8 +117,8 @@ export async function POST(
       data: { interviewSessionId: id, ...result },
     })
     // Email summary is a paid-session perk (#16) — free sessions get the web
-    // report only.
-    if (interview.isPaid) void invokeEmailLambda(id)
+    // report only. `after` sends it once the response is out (#54).
+    if (interview.isPaid) after(() => sendSessionSummaryEmail(id))
     return Response.json({ feedback, cached: false })
   } catch (err) {
     // P2002: unique constraint — a concurrent request already created the row.

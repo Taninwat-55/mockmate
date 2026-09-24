@@ -50,7 +50,7 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 | AI | Vercel AI SDK + `@ai-sdk/google` | Provider abstraction — swap Gemini for GPT/Claude by changing one import |
 | LLM | Google Gemini Flash | Free tier (1,500 req/day), sufficient for MVP |
 | Analytics | PostHog | Events: `session_started`, `session_completed`, `feedback_rated` |
-| Email | Resend via AWS Lambda | Async post-session summary, non-blocking |
+| Email | Resend (HTTP API) via Next.js `after()` | Async post-session summary for paid sessions, non-blocking — no AWS (#54) |
 | Styling | Tailwind v4 + PostCSS | PostCSS required by Next.js; not needed in Vite-based projects |
 
 ## Key Architecture Rules
@@ -191,7 +191,7 @@ Key constraints from the entity model:
 `IN_PROGRESS` → `COMPLETED` (5 questions done or user exits early)
 `IN_PROGRESS` → `ABANDONED` (Vercel Cron, daily at midnight, 24h threshold)
 
-On `COMPLETED`: Lambda is invoked async (fire-and-forget) to send a summary email. The feedback page does not wait for this.
+On `COMPLETED`: for paid sessions, the feedback route schedules the summary email with `after()` (`lib/session-summary-email.ts`, Resend). It runs after the response is sent, so the feedback page never waits for it or breaks on it.
 
 ## AI Interaction Patterns
 
@@ -213,8 +213,7 @@ GOOGLE_CLIENT_ID=       # Google OAuth
 GOOGLE_CLIENT_SECRET=   # Google OAuth
 GOOGLE_GENERATIVE_AI_API_KEY=  # Gemini API
 POSTHOG_KEY=            # PostHog project key
-RESEND_API_KEY=         # Resend email (used in Lambda)
-AWS_LAMBDA_FUNCTION_NAME=      # Lambda function to invoke on session complete
+RESEND_API_KEY=         # Resend email — post-session summary (paid sessions)
 CRON_SECRET=            # Secret token checked by the Vercel Cron route
 ```
 
