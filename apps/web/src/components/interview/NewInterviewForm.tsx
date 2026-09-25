@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
+import { unstable_rethrow } from "next/navigation"
 import { FileUp } from "lucide-react"
 import { toast } from "sonner"
 
@@ -127,12 +128,7 @@ export function NewInterviewForm({
         )
         return
       }
-      const result = await updateSavedResume({ resume: text })
-      if (result.success) {
-        toast.success("CV uploaded and saved.")
-      } else {
-        toast.error(result.error)
-      }
+      await saveResume(text)
     } catch {
       toast.error("Couldn't read that PDF — paste your resume instead.")
     } finally {
@@ -140,22 +136,42 @@ export function NewInterviewForm({
     }
   }
 
+  async function saveResume(text: string) {
+    try {
+      const result = await updateSavedResume({ resume: text })
+      if (result.success) {
+        toast.success("CV uploaded and saved.")
+      } else {
+        toast.error(result.error)
+      }
+    } catch {
+      // The text is already in the textarea, so only the save failed.
+      toast.error("Couldn't save your CV. Refresh the page and try again.")
+    }
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     startTransition(async () => {
-      const result = await createInterviewSession({
-        title,
-        seniority,
-        workSetting,
-        employmentType,
-        resume,
-        jobDescription,
-        // Only meaningful when both are available; otherwise the server decides.
-        preferCredit: bothAvailable ? preferCredit : undefined,
-      })
-      // On success the action redirects, so we only get here on failure.
-      if (result && !result.success) {
-        toast.error(result.error)
+      try {
+        const result = await createInterviewSession({
+          title,
+          seniority,
+          workSetting,
+          employmentType,
+          resume,
+          jobDescription,
+          // Only meaningful when both are available; otherwise the server decides.
+          preferCredit: bothAvailable ? preferCredit : undefined,
+        })
+        // On success the action redirects, so we only get here on failure.
+        if (result && !result.success) {
+          toast.error(result.error)
+        }
+      } catch (error) {
+        // The success redirect arrives as a thrown error; let Next handle it.
+        unstable_rethrow(error)
+        toast.error("Couldn't reach the server. Refresh the page and try again.")
       }
     })
   }

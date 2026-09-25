@@ -17,13 +17,18 @@ export function FeedbackRating({
 
   async function handleRate(value: number) {
     setSaving(true)
-    const result = await submitFeedbackRating(sessionId, value)
-    if (result.success) {
-      setRating(value)
-    } else {
-      toast.error("Failed to save your rating.")
+    try {
+      const result = await submitFeedbackRating(sessionId, value)
+      if (result.success) {
+        setRating(value)
+      } else {
+        toast.error("Failed to save your rating.")
+      }
+    } catch {
+      toast.error("Couldn't reach the server. Refresh the page and try again.")
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   return (

@@ -69,20 +69,22 @@ export function InterviewChat({
   useEffect(() => {
     if (initialMessages.length > 0 || startedRef.current) return
     startedRef.current = true
-    startInterview(sessionId).then((result) => {
-      if (result.success) {
-        setMessages([
-          {
-            id: result.question.id,
-            role: "assistant",
-            parts: [{ type: "text", text: result.question.text }],
-          },
-        ])
-      } else {
-        toast.error(result.error)
-      }
-      setOpening(false)
-    })
+    startInterview(sessionId)
+      .then((result) => {
+        if (result.success) {
+          setMessages([
+            {
+              id: result.question.id,
+              role: "assistant",
+              parts: [{ type: "text", text: result.question.text }],
+            },
+          ])
+        } else {
+          toast.error(result.error)
+        }
+      })
+      .catch(() => toast.error("Couldn't reach the server. Refresh the page and try again."))
+      .finally(() => setOpening(false))
   }, [initialMessages.length, sessionId, setMessages])
 
   // First-token timeout (PRD §7): if nothing has started streaming within 5s of
@@ -104,11 +106,16 @@ export function InterviewChat({
   }
 
   async function handleEndEarly() {
-    const result = await endInterviewEarly(sessionId)
-    if (result.success) {
-      router.refresh()
-    } else {
-      toast.error(result.error ?? "Couldn't end the interview.")
+    try {
+      const result = await endInterviewEarly(sessionId)
+      if (result.success) {
+        router.refresh()
+      } else {
+        toast.error(result.error ?? "Couldn't end the interview.")
+      }
+    } catch {
+      // Thrown, not returned: stale action ID after a deploy, or a network error.
+      toast.error("Couldn't end the interview. Refresh the page and try again.")
     }
   }
 
