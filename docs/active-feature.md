@@ -8,7 +8,13 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Nothing in flight — pick the next issue from the board (Ready column)._
+- **#58 fix: End Interview Early fails silently** (`fix/end-early-silent-failure`)
+  - Scope: catch thrown Server Action errors (stale action ID after a deploy, network)
+    in every client-side call and show a toast: `endInterviewEarly`, `startInterview`,
+    `createInterviewSession` (success redirect rethrown), `updateSavedResume`,
+    `submitFeedbackRating`.
+  - Acceptance: failing end-early shows an error toast; same for the other calls;
+    `pnpm build` passes.
 
 ---
 
