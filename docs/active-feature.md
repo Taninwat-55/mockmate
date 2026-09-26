@@ -8,14 +8,22 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#54 Email via Resend, remove AWS Lambda** — branch `feature/resend-email`.
-  Scope: send the paid-session summary email from the feedback route with `after()`
-  via Resend's HTTP API (`lib/session-summary-email.ts`, HTML-escaped); delete
-  `lambda/`, `invoke-email-lambda.ts`, `@aws-sdk/client-lambda`, AWS env entries.
+- **#58 fix: End Interview Early fails silently** (`fix/end-early-silent-failure`)
+  - Scope: catch thrown Server Action errors (stale action ID after a deploy, network)
+    in every client-side call and show a toast: `endInterviewEarly`, `startInterview`,
+    `createInterviewSession` (success redirect rethrown), `updateSavedResume`,
+    `submitFeedbackRating`.
+  - Acceptance: failing end-early shows an error toast; same for the other calls;
+    `pnpm build` passes.
 
 ---
 
 ## History
+
+- 2026-09-24  Email via Resend, AWS Lambda removed (#54, PR #55): paid-session summary
+  email sent from the feedback route with `after()` via Resend's HTTP API
+  (`lib/session-summary-email.ts`), now HTML-escaped; `lambda/`, the AWS SDK and AWS
+  env vars removed. Released with #44 as **v0.2.0** (PR #56), prod migration applied.  ✓
 
 - 2026-09-24  Any-role support + interview context options (#44, PR #53): role with
   example chips, seniority / work setting / employment type chips, CV + job posting
