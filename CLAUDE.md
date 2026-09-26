@@ -48,7 +48,7 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 | Database | Neon PostgreSQL + Prisma v7 | Serverless Postgres, type-safe queries |
 | Auth | NextAuth v5 beta + Google OAuth | Google-only for MVP, no password storage |
 | AI | Vercel AI SDK + `@ai-sdk/google` | Provider abstraction — swap Gemini for GPT/Claude by changing one import |
-| LLM | Google Gemini Flash | Free tier (1,500 req/day), sufficient for MVP |
+| LLM | Google Gemini, tiered per session (`lib/ai.ts`) | Free: 2.5 Flash. Paid: 3.5 Flash chat + 2.5 Pro grading |
 | Analytics | PostHog | Events: `session_started`, `session_completed`, `feedback_rated` |
 | Email | Resend (HTTP API) via Next.js `after()` | Async post-session summary for paid sessions, non-blocking — no AWS (#54) |
 | Styling | Tailwind v4 + PostCSS | PostCSS required by Next.js; not needed in Vite-based projects |
@@ -203,7 +203,7 @@ On `COMPLETED`: for paid sessions, the feedback route schedules the summary emai
 
 ## AI Interaction Patterns
 
-**Streaming responses** (`streamText`) — used for interview exchanges. Return `result.toDataStreamResponse()` from the API route; use `useChat` hook on the frontend.
+**Streaming responses** (`streamText`) — used for interview exchanges. Return `result.toUIMessageStreamResponse()` from the API route; use `useChat` hook on the frontend.
 
 **Structured JSON output** (`generateObject` with Zod schema) — used for the grading matrix. The LLM returns the full `Feedback` shape as validated JSON.
 
@@ -223,11 +223,17 @@ GOOGLE_GENERATIVE_AI_API_KEY=  # Gemini API
 POSTHOG_KEY=            # PostHog project key
 RESEND_API_KEY=         # Resend email — post-session summary (paid sessions)
 CRON_SECRET=            # Secret token checked by the Vercel Cron route
+STRIPE_SECRET_KEY=      # Stripe API key (sandbox locally)
+STRIPE_WEBHOOK_SECRET=  # Verifies /api/stripe/webhook events
+STRIPE_PRICE_SINGLE=    # Price ID, 1 credit (19 DKK)
+STRIPE_PRICE_FIVE=      # Price ID, 5 credits (79 DKK)
 ```
 
 ## Phase 2 (Not yet built)
 
-Do not implement these unless explicitly asked: **S3/CloudFront-backed** PDF resume storage, audio recording (Whisper), Stripe billing, multiple AI personas. The `subscriptionStatus` field on `User` is a stub — no billing logic exists.
+Do not implement these unless explicitly asked: **S3/CloudFront-backed** PDF resume storage, audio recording (Whisper), multiple AI personas.
+
+> Note: pay-per-use billing already shipped in #16 (credits on `User`, Stripe one-time Checkout + webhook, session gating). Stripe live activation is tracked in #40.
 
 > Note: a scoped-down, text-only CV upload already shipped in #29 — the PDF is parsed to plain text **client-side** and only the text is stored (`User.savedResume`), no file storage. Phase 2's PDF item refers specifically to the heavier S3/CloudFront file-storage version.
 
