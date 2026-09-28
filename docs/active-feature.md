@@ -8,16 +8,16 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#65 feat: separate role and company fields** (`feature/role-company`)
-  - Scope: optional `InterviewSession.company` (migration); form asks role + company
-    separately; `interviewTitle()` shows "Role at Company" in header, history, resume
-    banner, feedback page and email; prompts get a `Company:` line and must not
-    invent one; feedback addresses the candidate as "you", never he/she.
-  - Acceptance: see #65.
+- _Nothing in flight — next: #46 multi-stage interviews (planning pass first)._
 
 ---
 
 ## History
+
+- 2026-09-28  Role + company fields (#65, PR #69): optional `InterviewSession.company`
+  (migration), separate form field, `interviewTitle()` "Role at Company" across UI and
+  email; prompts use the company and never invent one; feedback written to "you",
+  never he/she. Ships in the next release.  ✓
 
 - 2026-09-28  Release **v0.3.0** (PR #68, tagged): #52 model tiers + daily free cap,
   #63 honest grading. Both migrations applied to production before the merge;
