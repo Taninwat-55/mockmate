@@ -8,17 +8,28 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#58 fix: End Interview Early fails silently** (`fix/end-early-silent-failure`)
-  - Scope: catch thrown Server Action errors (stale action ID after a deploy, network)
-    in every client-side call and show a toast: `endInterviewEarly`, `startInterview`,
-    `createInterviewSession` (success redirect rethrown), `updateSavedResume`,
-    `submitFeedbackRating`.
-  - Acceptance: failing end-early shows an error toast; same for the other calls;
-    `pnpm build` passes.
+- _Release v0.3.0 in progress (#52 + #63, two migrations) — then pick the next issue from the board._
 
 ---
 
 ## History
+
+- 2026-09-28  Question count + honest grading (#63, PR #66): directives carry "main
+  question N of 5"; fewer than 3 answered questions → `INCOMPLETE` ("Not enough to
+  judge"), enforced in code and at display time; anchored grading rubric + code
+  guard on STRONG_HIRE; generic answers and rambling graded down. Eval harness
+  (`apps/web/scripts/interview-eval`): 6th questions 5/21 → 0/21, 2-answer early
+  exit Strong Hire → Not enough to judge.  ✓
+
+- 2026-09-28  Model tiers per plan + daily free cap (#52, PR #64): `ModelTier`
+  (FREE/PAID/MAX) on `InterviewSession`, one tier map in `lib/ai.ts`; all tiers on
+  3.8 Flash live, paid thinks deeper on eval notes, owner MAX grades with 3.1 Pro.
+  Owner Free/Pro/Max picker + tier badge. 100 free sessions/UTC day, checked before
+  the weekly free is claimed. Side-by-side test (25 sessions) in the PR.  ✓
+
+- 2026-09-26  End Early silent failure (#58, PR #59): thrown Server Action errors
+  (stale action ID after a deploy, network) now toast in all 5 client-side calls;
+  `createInterviewSession` rethrows its success redirect via `unstable_rethrow`.  ✓
 
 - 2026-09-24  Email via Resend, AWS Lambda removed (#54, PR #55): paid-session summary
   email sent from the feedback route with `after()` via Resend's HTTP API

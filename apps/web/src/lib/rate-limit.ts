@@ -33,7 +33,7 @@ export const LIMITS = {
   sessionCreate: { limit: 10, windowSeconds: 86_400 },
   /** Seeding the opening question of a session. */
   startInterview: { limit: 20, windowSeconds: 3_600 },
-  /** Grading passes (Pro model — the priciest single call in the app). */
+  /** Grading passes (deep thinking — the priciest single call in the app). */
   feedback: { limit: 20, windowSeconds: 3_600 },
   /** Stripe Checkout session creation. Costs nothing in AI, but not free to spam. */
   checkout: { limit: 10, windowSeconds: 3_600 },

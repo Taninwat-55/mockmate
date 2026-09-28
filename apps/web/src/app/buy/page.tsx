@@ -11,7 +11,7 @@ import {
 import { BuyButton } from "@/components/billing/BuyButton"
 
 const PACK_PERKS = [
-  "Pro interviewer + grading models",
+  "Deeper AI grading",
   "Full feedback report by email",
   "Full session history",
 ]
@@ -90,8 +90,8 @@ export default function BuyPage() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Secure payment via Stripe. Free users get 1 interview every 7 days on
-          the base model — credits unlock the Pro experience.
+          Secure payment via Stripe. Free users get 1 full interview every 7
+          days — credits add deeper grading, the emailed report and full history.
         </p>
       </div>
     </main>

@@ -12,12 +12,14 @@ const SIGNAL_LABEL: Record<OverallSignal, string> = {
   STRONG_HIRE: "Strong Hire",
   HIRE: "Hire",
   NO_HIRE: "No Hire",
+  INCOMPLETE: "Not enough to judge",
 }
 
 const SIGNAL_COLOR: Record<OverallSignal, string> = {
   STRONG_HIRE: "#16a34a",
   HIRE: "#2563eb",
   NO_HIRE: "#dc2626",
+  INCOMPLETE: "#6b7280",
 }
 
 // The role title is user input and the feedback text is model output — escape

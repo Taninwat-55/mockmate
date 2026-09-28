@@ -2,7 +2,7 @@ import { z } from "zod"
 
 // Type-only: the label maps below are used by the (client) setup form, which must
 // not pull the Prisma client into the browser bundle.
-import type { EmploymentType, Seniority, WorkSetting } from "@mockmate/db"
+import type { EmploymentType, ModelTier, Seniority, WorkSetting } from "@mockmate/db"
 
 // ============================================================
 // Interview context (#44) — role, level, work setting, employment type
@@ -26,6 +26,14 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
   FULL_TIME: "Full-time",
   PART_TIME: "Part-time",
   INTERNSHIP: "Internship",
+}
+
+// Model tier names shown to people (#52): the interview badge and the owner's
+// tier picker. PAID reads as "Pro" everywhere in the product copy.
+export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
+  FREE: "Free",
+  PAID: "Pro",
+  MAX: "Max",
 }
 
 // What every prompt needs to know about the interview it is running.

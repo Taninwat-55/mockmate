@@ -1,5 +1,7 @@
 import type { Feedback } from "@mockmate/db"
 
+import { MAX_MAIN_QUESTIONS, MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+
 import { FeedbackRating } from "./FeedbackRating"
 
 const SIGNAL_CONFIG = {
@@ -15,7 +17,11 @@ const SIGNAL_CONFIG = {
     label: "No Hire",
     className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
-} as const
+  INCOMPLETE: {
+    label: "Not enough to judge",
+    className: "bg-muted text-muted-foreground",
+  },
+} as const satisfies Record<Feedback["overallSignal"], { label: string; className: string }>
 
 const SCORE_LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent"] as const
 
@@ -93,11 +99,19 @@ function DimensionCard({
 export function FeedbackDisplay({
   feedback,
   sessionId,
+  answeredQuestions,
 }: {
   feedback: Feedback
   sessionId: string
+  // Main questions with an evaluation note; fewer than 5 after an early exit (#63).
+  answeredQuestions: number
 }) {
-  const signal = SIGNAL_CONFIG[feedback.overallSignal]
+  // Also applied at display time, so feedback graded before #63 (a stored verdict
+  // on one or two answers) reads as "Not enough to judge" too.
+  const signal =
+    SIGNAL_CONFIG[
+      answeredQuestions < MIN_QUESTIONS_FOR_VERDICT ? "INCOMPLETE" : feedback.overallSignal
+    ]
 
   return (
     <div className="space-y-4">
@@ -106,6 +120,12 @@ export function FeedbackDisplay({
         <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${signal.className}`}>
           {signal.label}
         </span>
+        {answeredQuestions < MAX_MAIN_QUESTIONS && (
+          <p className="text-xs text-muted-foreground">
+            Based on {answeredQuestions} of {MAX_MAIN_QUESTIONS} questions — the
+            interview ended early, so treat the scores as provisional.
+          </p>
+        )}
         <p className="text-sm">{feedback.overallSummary}</p>
       </div>
 
