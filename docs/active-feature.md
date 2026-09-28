@@ -8,17 +8,18 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#63 fix: question-count drift + lenient grading** (`fix/grading-and-question-count`)
-  - Scope: directives carry "main question N of 5"; evidence floor (< 3 answered →
-    `INCOMPLETE`, "Not enough to judge", also at display time); anchored grading
-    rubric + code guard on STRONG_HIRE; judge/eval notes treat polished-but-generic
-    answers as weak; rambling costs communication. Committed eval harness
-    (`apps/web/scripts/interview-eval`) for before/after measurement.
-  - Acceptance: see #63.
+- _Release v0.3.0 in progress (#52 + #63, two migrations) — then pick the next issue from the board._
 
 ---
 
 ## History
+
+- 2026-09-28  Question count + honest grading (#63, PR #66): directives carry "main
+  question N of 5"; fewer than 3 answered questions → `INCOMPLETE` ("Not enough to
+  judge"), enforced in code and at display time; anchored grading rubric + code
+  guard on STRONG_HIRE; generic answers and rambling graded down. Eval harness
+  (`apps/web/scripts/interview-eval`): 6th questions 5/21 → 0/21, 2-answer early
+  exit Strong Hire → Not enough to judge.  ✓
 
 - 2026-09-28  Model tiers per plan + daily free cap (#52, PR #64): `ModelTier`
   (FREE/PAID/MAX) on `InterviewSession`, one tier map in `lib/ai.ts`; all tiers on
