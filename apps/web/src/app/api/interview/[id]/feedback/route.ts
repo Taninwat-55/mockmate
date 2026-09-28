@@ -44,6 +44,7 @@ export async function POST(
       isPaid: true,
       modelTier: true,
       title: true,
+      company: true,
       seniority: true,
       workSetting: true,
       employmentType: true,

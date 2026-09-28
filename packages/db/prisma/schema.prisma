@@ -150,7 +150,8 @@ model InterviewSession {
   id                String                 @id @default(cuid())
   userId            String
   status            InterviewSessionStatus @default(IN_PROGRESS)
-  title             String                 // User-provided role, e.g. "Barista at Espresso House"
+  title             String                 // User-provided role, e.g. "Barista" (pre-#65 rows may include "at Company")
+  company           String?                // optional company being interviewed for (#65)
   jobDescription    String?                @db.Text // optional (#44)
   resume            String?                @db.Text // optional (#44)
   seniority         Seniority              @default(JUNIOR)

@@ -39,6 +39,7 @@ export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
 // What every prompt needs to know about the interview it is running.
 export type InterviewContext = {
   role: string
+  company?: string | null
   seniority: Seniority
   workSetting?: WorkSetting | null
   employmentType?: EmploymentType | null

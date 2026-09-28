@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { prisma, InterviewSessionStatus } from "@mockmate/db"
 
+import { interviewTitle } from "@/lib/interview-context"
+
 interface ResumeBannerProps {
   userId: string
 }
@@ -9,7 +11,7 @@ export async function ResumeBanner({ userId }: ResumeBannerProps) {
   const session = await prisma.interviewSession.findFirst({
     where: { userId, status: InterviewSessionStatus.IN_PROGRESS },
     orderBy: { lastActiveAt: "desc" },
-    select: { id: true, title: true },
+    select: { id: true, title: true, company: true },
   })
 
   if (!session) return null
@@ -22,7 +24,7 @@ export async function ResumeBanner({ userId }: ResumeBannerProps) {
             You have an unfinished interview
           </p>
           <p className="mt-0.5 truncate text-xs text-amber-700 dark:text-amber-400">
-            {session.title}
+            {interviewTitle(session)}
           </p>
         </div>
         <Link

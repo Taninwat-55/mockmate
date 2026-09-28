@@ -15,7 +15,7 @@ if (!existsSync(DIR)) {
 
 for (const tier of readdirSync(DIR)) {
   const runs = readdirSync(`${DIR}${tier}`).map((f) => JSON.parse(readFileSync(`${DIR}${tier}/${f}`, "utf8")))
-  let usd = 0, truncated = 0, errors = 0, followups = 0, sixth = 0, earlyClose = 0, ends = 0
+  let usd = 0, truncated = 0, errors = 0, followups = 0, sixth = 0, earlyClose = 0, ends = 0, thirdPerson = 0
   const flagged = []
   const byScenario = {}
   for (const r of runs) {
@@ -37,6 +37,12 @@ for (const tier of readdirSync(DIR)) {
       }
     }
     const f = r.feedback
+    // The report is read by the candidate: it must say "you", never he/she (#65).
+    if (f) {
+      const text = Object.values(f).filter((v) => typeof v === "string").join(" ")
+      const hits = text.match(/\b(he|she|his|her|him|the candidate)\b/gi)
+      if (hits) { thirdPerson++; flagged.push(`3rd person    ${r.scenario}#${r.repeat}: ${[...new Set(hits.map((h) => h.toLowerCase()))].join(", ")}`) }
+    }
     const grade = f
       ? `${f.roleKnowledgeScore}/${f.communicationClarityScore}/${f.problemSolvingScore} ${f.overallSignal}`
       : "none"
@@ -44,7 +50,7 @@ for (const tier of readdirSync(DIR)) {
   }
   console.log(`\n=== ${tier}  (${runs.length} sessions)`)
   console.log(`cost ~${((usd / runs.length) * DKK_PER_USD).toFixed(2)} DKK/session | truncated ${truncated} | errors ${errors} | follow-ups ${(followups / runs.length).toFixed(1)}/session`)
-  console.log(`6th question after the end: ${sixth}/${ends} | early close: ${earlyClose}`)
+  console.log(`6th question after the end: ${sixth}/${ends} | early close: ${earlyClose} | reports not in 2nd person: ${thirdPerson}/${runs.length}`)
   for (const [id, s] of Object.entries(byScenario)) console.log(`  ${id.padEnd(30)} expect ${s.expect.padEnd(10)} ${s.grades.join(" | ")}`)
   for (const line of flagged) console.log(`  ! ${line}`)
 }

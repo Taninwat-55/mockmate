@@ -1,5 +1,7 @@
 import { prisma, type OverallSignal } from "@mockmate/db"
 
+import { interviewTitle } from "@/lib/interview-context"
+
 // Post-session summary email (#54) — a paid-session perk. Replaces the AWS
 // Lambda: the feedback route schedules this with `after()`, so it runs once the
 // response has been sent and never blocks or breaks the feedback page. Sent via
@@ -120,7 +122,7 @@ export async function sendSessionSummaryEmail(sessionId: string): Promise<void> 
     const feedback = await prisma.feedback.findUnique({
       where: { interviewSessionId: sessionId },
       include: {
-        interviewSession: { select: { title: true, user: { select: { email: true, name: true } } } },
+        interviewSession: { select: { title: true, company: true, user: { select: { email: true, name: true } } } },
       },
     })
     if (!feedback) {
@@ -128,7 +130,8 @@ export async function sendSessionSummaryEmail(sessionId: string): Promise<void> 
       return
     }
 
-    const { title, user } = feedback.interviewSession
+    const { user } = feedback.interviewSession
+    const title = interviewTitle(feedback.interviewSession)
     const html = buildEmailHtml({
       title,
       firstName: user.name?.split(" ")[0] ?? null,

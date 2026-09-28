@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { prisma, InterviewSessionStatus } from "@mockmate/db"
 
+import { interviewTitle } from "@/lib/interview-context"
+
 interface SessionHistoryProps {
   userId: string
 }
@@ -34,7 +36,7 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: hasPaidHistory ? undefined : FREE_HISTORY_LIMIT,
-    select: { id: true, title: true, status: true, createdAt: true },
+    select: { id: true, title: true, company: true, status: true, createdAt: true },
   })
 
   if (sessions.length === 0) {
@@ -57,7 +59,7 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
 
         const row = (
           <div className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm">
-            <span className="font-medium truncate mr-4">{session.title}</span>
+            <span className="font-medium truncate mr-4">{interviewTitle(session)}</span>
             <div className="flex items-center gap-3 shrink-0">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CLASS[session.status]}`}
