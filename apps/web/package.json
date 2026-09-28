@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "eval:interview": "node --env-file=.env.local scripts/interview-eval/boot.mjs",
+    "eval:summary": "node scripts/interview-eval/summarize.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",
@@ -43,6 +45,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "jiti": "2.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

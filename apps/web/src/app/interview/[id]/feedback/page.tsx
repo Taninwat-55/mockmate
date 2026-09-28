@@ -28,9 +28,12 @@ export default async function FeedbackPage({
     redirect(`/interview/${id}`)
   }
 
-  const feedback = await prisma.feedback.findUnique({
-    where: { interviewSessionId: id },
-  })
+  const [feedback, answeredQuestions] = await Promise.all([
+    prisma.feedback.findUnique({ where: { interviewSessionId: id } }),
+    prisma.question.count({
+      where: { interviewSessionId: id, evaluationNote: { not: null } },
+    }),
+  ])
 
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -40,7 +43,11 @@ export default async function FeedbackPage({
       </div>
 
       {feedback ? (
-        <FeedbackDisplay feedback={feedback} sessionId={id} />
+        <FeedbackDisplay
+          feedback={feedback}
+          sessionId={id}
+          answeredQuestions={answeredQuestions}
+        />
       ) : (
         <FeedbackGenerator sessionId={id} />
       )}

@@ -1,6 +1,6 @@
 import type { ModelMessage } from "ai"
 
-import type { InterviewContext, InterviewTurn } from "@/types/interview"
+import type { InterviewAction, InterviewContext, InterviewTurn } from "@/types/interview"
 import { buildCandidateProfile } from "@/lib/interview-context"
 import {
   MAX_FOLLOWUPS,
@@ -76,7 +76,7 @@ ${jobDescription || "Not provided. Base your questions on what this role typical
 === CANDIDATE RESUME ===
 ${resume || "Not provided. Ask about their background as part of the interview where it fits."}
 
-When you are ready, begin the interview by greeting the candidate by their first name, then ask your first main question.`
+When you are ready, begin the interview by greeting the candidate by their first name, then ask your first main question (main question 1 of ${MAX_MAIN_QUESTIONS}).`
 }
 
 // Assemble the full message array for an LLM call. This is the ONLY place the array
@@ -97,4 +97,28 @@ export function buildInterviewMessages({
       content: turn.content,
     })),
   ]
+}
+
+// The per-turn control line appended to the system prompt by the chat route: what
+// the interviewer must do next, decided by the §6 state machine. It always states
+// where the interview is ("main question 3 of 5"), because the model can't count
+// questions reliably on its own (#63: it asked 6th questions and closed early).
+// Shared with the eval harness (scripts/interview-eval) so it tests the live wording.
+export function interviewerDirective(
+  action: InterviewAction,
+  { mainQuestionCount, followupCount }: { mainQuestionCount: number; followupCount: number },
+): string {
+  const n = MAX_MAIN_QUESTIONS
+  if (action === "ASK_FOLLOWUP") {
+    const where = `You are still on main question ${mainQuestionCount} of ${n}. This is follow-up ${followupCount + 1} of ${MAX_FOLLOWUPS} — not a new main question, and not the end of the interview.`
+    return followupCount === 0
+      ? `${where} The candidate's answer was weak: vague, too short, generic, or missing what they actually did. Ask one pointed follow-up that makes them be specific — what they did themselves, and what the result was. Do not give them the answer.`
+      : `${where} The answer is still weak. Ask one final follow-up; you may add a light hint or nudge to avoid a dead end.`
+  }
+  if (action === "END_SESSION") {
+    return `All ${n} main questions have now been asked and answered. The interview is over. Thank the candidate in one or two sentences and stop. Do not ask any question, do not invite questions, and do not use a question mark.`
+  }
+  const next = mainQuestionCount + 1
+  const last = next === n ? " It is the last main question: ask it and wait for the answer — do not wrap up the interview yet." : ""
+  return `Main question ${mainQuestionCount} of ${n} is finished. Ask main question ${next} of ${n} now: one question, chosen from the candidate's resume and the target role.${last}`
 }
