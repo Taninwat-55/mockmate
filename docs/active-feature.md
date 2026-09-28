@@ -8,11 +8,20 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Release v0.3.0 in progress (#52 + #63, two migrations) — then pick the next issue from the board._
+- **#65 feat: separate role and company fields** (`feature/role-company`)
+  - Scope: optional `InterviewSession.company` (migration); form asks role + company
+    separately; `interviewTitle()` shows "Role at Company" in header, history, resume
+    banner, feedback page and email; prompts get a `Company:` line and must not
+    invent one; feedback addresses the candidate as "you", never he/she.
+  - Acceptance: see #65.
 
 ---
 
 ## History
+
+- 2026-09-28  Release **v0.3.0** (PR #68, tagged): #52 model tiers + daily free cap,
+  #63 honest grading. Both migrations applied to production before the merge;
+  main/develop reconciled in #67 after the squashed #62.  ✓
 
 - 2026-09-28  Question count + honest grading (#63, PR #66): directives carry "main
   question N of 5"; fewer than 3 answered questions → `INCOMPLETE` ("Not enough to

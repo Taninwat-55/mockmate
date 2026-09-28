@@ -30,6 +30,7 @@ import { posthog } from "@/lib/posthog"
 // to control token cost; the title (the role) is a short user-facing label.
 const MAX_INPUT_CHARS = 6000
 const MAX_TITLE_CHARS = 120
+const MAX_COMPANY_CHARS = 100
 
 function optionalText(label: string) {
   return z
@@ -49,6 +50,13 @@ const newInterviewSchema = z.object({
     .trim()
     .min(1, "Tell us which role you're interviewing for.")
     .max(MAX_TITLE_CHARS, `Title must be ${MAX_TITLE_CHARS} characters or fewer.`),
+  // Optional, kept apart from the role (#65) so the interviewer can use it on its own.
+  company: z
+    .string()
+    .trim()
+    .max(MAX_COMPANY_CHARS, `Company must be ${MAX_COMPANY_CHARS} characters or fewer.`)
+    .optional()
+    .transform((value) => value || null),
   // Resume and job description are optional (#44) — first-timers often have
   // neither. Blank input is stored as null.
   resume: optionalText("Resume"),
@@ -183,6 +191,7 @@ export async function createInterviewSession(
         data: {
           userId: session.user.id,
           title: parsed.data.title,
+          company: parsed.data.company,
           resume: parsed.data.resume,
           jobDescription: parsed.data.jobDescription,
           seniority: parsed.data.seniority,
@@ -274,6 +283,7 @@ export async function startInterview(
         status: true,
         modelTier: true,
         title: true,
+        company: true,
         seniority: true,
         workSetting: true,
         employmentType: true,

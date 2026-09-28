@@ -32,6 +32,8 @@ Dimensions:
 
 For each dimension: one concrete strength observation, one concrete weakness observation, one actionable improvement tip (each 1–2 sentences).
 
+The candidate reads this report. Write every strength, weakness, tip and the summary to them directly as "you" ("You gave a concrete example…"). Never refer to them as he, she, they or "the candidate", and never guess their gender from their name.
+
 Overall signal:
 - STRONG_HIRE: strong, concrete answers on nearly every question and no real weakness in any dimension. Rare.
 - HIRE: a solid candidate with clear gaps in one or two areas

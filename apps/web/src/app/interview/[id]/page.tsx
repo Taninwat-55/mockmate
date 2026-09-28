@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { prisma, InterviewSessionStatus, MessageRole, type ModelTier } from "@mockmate/db"
 import { auth } from "@/auth"
+import { interviewTitle } from "@/lib/interview-context"
 import { buttonVariants } from "@/components/ui/button"
 import { InterviewChat } from "@/components/interview/InterviewChat"
 import type { InterviewUIMessage } from "@/types/interview-chat"
@@ -34,6 +35,7 @@ export default async function InterviewPage({
     select: {
       id: true,
       title: true,
+      company: true,
       status: true,
       modelTier: true,
       questions: {
@@ -60,7 +62,7 @@ export default async function InterviewPage({
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             {interview.status}
           </p>
-          <h1 className="text-2xl font-semibold tracking-tight">{interview.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{interviewTitle(interview)}</h1>
           <p className="max-w-md text-sm text-muted-foreground">
             This interview is no longer active.
           </p>
@@ -83,7 +85,7 @@ export default async function InterviewPage({
   return (
     <main className="flex flex-1 flex-col">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <h1 className="text-sm font-medium tracking-tight">{interview.title}</h1>
+        <h1 className="text-sm font-medium tracking-tight">{interviewTitle(interview)}</h1>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
             TIER_BADGE[interview.modelTier].className

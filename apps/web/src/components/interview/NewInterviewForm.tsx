@@ -71,6 +71,7 @@ export function NewInterviewForm({
   isOwner,
 }: NewInterviewFormProps) {
   const [title, setTitle] = useState("")
+  const [company, setCompany] = useState("")
   const [seniority, setSeniority] = useState<Seniority>("JUNIOR")
   const [workSetting, setWorkSetting] = useState<WorkSetting>()
   const [employmentType, setEmploymentType] = useState<EmploymentType>()
@@ -159,6 +160,7 @@ export function NewInterviewForm({
       try {
         const result = await createInterviewSession({
           title,
+          company,
           seniority,
           workSetting,
           employmentType,
@@ -188,7 +190,7 @@ export function NewInterviewForm({
         </label>
         <Input
           id="title"
-          placeholder="Type any role, e.g. Barista at Espresso House"
+          placeholder="Type any role, e.g. Barista"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={busy}
@@ -208,6 +210,21 @@ export function NewInterviewForm({
             </Button>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="company" className="text-sm font-medium">
+          At what company?{" "}
+          <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <Input
+          id="company"
+          placeholder="e.g. Espresso House"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          maxLength={100}
+          disabled={busy}
+        />
       </div>
 
       <ChipGroup

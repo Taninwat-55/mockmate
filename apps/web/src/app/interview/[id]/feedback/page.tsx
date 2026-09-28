@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import { prisma, InterviewSessionStatus } from "@mockmate/db"
 import { auth } from "@/auth"
+import { interviewTitle } from "@/lib/interview-context"
 import { buttonVariants } from "@/components/ui/button"
 import { FeedbackDisplay } from "@/components/interview/FeedbackDisplay"
 import { FeedbackGenerator } from "@/components/interview/FeedbackGenerator"
@@ -19,7 +20,7 @@ export default async function FeedbackPage({
 
   const interview = await prisma.interviewSession.findFirst({
     where: { id, userId: session.user.id },
-    select: { id: true, title: true, status: true },
+    select: { id: true, title: true, company: true, status: true },
   })
 
   if (!interview) notFound()
@@ -39,7 +40,7 @@ export default async function FeedbackPage({
     <main className="mx-auto w-full max-w-3xl px-6 py-10">
       <div className="mb-8 space-y-1">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Feedback</p>
-        <h1 className="text-2xl font-semibold tracking-tight">{interview.title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{interviewTitle(interview)}</h1>
       </div>
 
       {feedback ? (

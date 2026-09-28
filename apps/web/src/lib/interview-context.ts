@@ -22,11 +22,12 @@ const SENIORITY_CALIBRATION: Record<Seniority, string> = {
 }
 
 // A short, labeled block describing the interview. It is built only from the role
-// title and fixed enum labels; the role title is user input, so callers must place
+// title, company and fixed enum labels; role and company are user input, so callers must place
 // this in a user message, never in the system prompt (PRD §6 injection defense).
 export function buildCandidateProfile(ctx: InterviewContext): string {
   const lines = [
     `Role: ${ctx.role}`,
+    ctx.company && `Company: ${ctx.company}`,
     `Level: ${SENIORITY_LABELS[ctx.seniority]}`,
     ctx.workSetting && `Work setting: ${WORK_SETTING_LABELS[ctx.workSetting]}`,
     ctx.employmentType && `Employment type: ${EMPLOYMENT_TYPE_LABELS[ctx.employmentType]}`,
@@ -38,14 +39,22 @@ export function buildCandidateProfile(ctx: InterviewContext): string {
 // Map an InterviewSession row (the role lives in `title`) to the prompt context.
 export function toInterviewContext(session: {
   title: string
+  company: string | null
   seniority: Seniority
   workSetting: WorkSetting | null
   employmentType: EmploymentType | null
 }): InterviewContext {
   return {
     role: session.title,
+    company: session.company,
     seniority: session.seniority,
     workSetting: session.workSetting,
     employmentType: session.employmentType,
   }
+}
+
+// How an interview is named in the UI and the email: "Barista at Espresso House".
+// Sessions from before #65 have no company; their title is shown as typed.
+export function interviewTitle(session: { title: string; company: string | null }): string {
+  return session.company ? `${session.title} at ${session.company}` : session.title
 }

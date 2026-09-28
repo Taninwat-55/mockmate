@@ -128,6 +128,7 @@ export async function POST(
       status: true,
       modelTier: true,
       title: true,
+      company: true,
       seniority: true,
       workSetting: true,
       employmentType: true,
