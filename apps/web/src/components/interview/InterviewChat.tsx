@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { startInterview, endInterviewEarly } from "@/actions/interview"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import type { StageProgress } from "@/lib/interview-engine"
 import type { InterviewUIMessage } from "@/types/interview-chat"
 
 const MAX_ANSWER_CHARS = 2000
@@ -26,14 +27,24 @@ function textOf(message: InterviewUIMessage): string {
     .join("")
 }
 
+// "Question 2 of 5", or "Round 2 of 3 · Question 2 of 4" in a multi-round loop.
+// Before the opening question arrives the round has 0 questions; show 1.
+function progressLabel(p: StageProgress): string {
+  const question = `Question ${Math.max(p.question, 1)} of ${p.questions}`
+  return p.rounds > 1 ? `Round ${p.round} of ${p.rounds} · ${question}` : question
+}
+
 export function InterviewChat({
   sessionId,
   initialMessages,
+  initialProgress,
 }: {
   sessionId: string
   initialMessages: InterviewUIMessage[]
+  initialProgress: StageProgress
 }) {
   const router = useRouter()
+  const [progress, setProgress] = useState(initialProgress)
   const [input, setInput] = useState("")
   const [timedOut, setTimedOut] = useState(false)
   const [opening, setOpening] = useState(initialMessages.length === 0)
@@ -51,7 +62,8 @@ export function InterviewChat({
         },
       }),
       onFinish: ({ message }) => {
-        // The 5th answer flips the session to COMPLETED server-side; refresh so the
+        if (message.metadata?.progress) setProgress(message.metadata.progress)
+        // The last answer flips the session to COMPLETED server-side; refresh so the
         // page swaps to the completed state.
         if (message.metadata?.sessionStatus === "COMPLETED") router.refresh()
       },
@@ -123,6 +135,9 @@ export function InterviewChat({
 
   return (
     <div className="flex flex-1 flex-col">
+      <p className="border-b border-border px-4 py-2 text-xs text-muted-foreground" aria-live="polite">
+        {progressLabel(progress)}
+      </p>
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
         {opening && messages.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground">

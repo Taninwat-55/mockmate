@@ -15,11 +15,14 @@ import {
 import { judgeAnswerWeak } from "@/lib/judge-answer"
 import { generateEvaluationNote } from "@/lib/evaluate-answer"
 import { generateFeedback } from "@/lib/generate-feedback"
-import { assessAnswer, determineNextAction } from "@/lib/interview-engine"
+import { STAGE_PLANS, assessAnswer, determineNextAction, stageProgress } from "@/lib/interview-engine"
 
 const RESULTS = new URL("./results/", import.meta.url).pathname
 const CANDIDATE_MODEL = "gemini-3.8-flash"
 const CANDIDATE_NAME = "Alex Jensen"
+// Which round plan each tier gets. Every tier is a single round until the loop
+// ships (#73).
+const PLAN_FOR_TIER = { FREE: STAGE_PLANS.SINGLE, PAID: STAGE_PLANS.SINGLE, MAX: STAGE_PLANS.SINGLE }
 
 async function candidateAnswer(scenario, history, questionNumber) {
   const store = session.getStore()
@@ -53,6 +56,7 @@ async function runSession(tier, scenario, repeat) {
   const store = { calls: [], errors: [], kind: "" }
   return session.run(store, async () => {
     const { context } = scenario
+    const stages = PLAN_FOR_TIER[tier]
     const resume = scenario.resume ?? null
     const jobDescription = scenario.jobDescription ?? null
     const started = Date.now()
@@ -75,7 +79,7 @@ async function runSession(tier, scenario, repeat) {
     })
 
     if (opening) {
-      questions.push({ text: opening, turns: [{ role: "assistant", content: opening }], followupCount: 0 })
+      questions.push({ stage: stages[0], text: opening, turns: [{ role: "assistant", content: opening }], followupCount: 0 })
       history.push({ role: "assistant", content: opening })
       let mainQuestionCount = 1
 
@@ -95,8 +99,9 @@ async function runSession(tier, scenario, repeat) {
           judgeAnswerWeak({ context, questionText: current.text, conversation: current.turns, tier }),
         )
         const { isWeak, wordCount } = assessAnswer(answer, llmJudgedWeak ?? false)
+        const progress = stageProgress(stages, questions)
         const action = determineNextAction({
-          mainQuestionCount,
+          progress,
           followupCount: current.followupCount,
           answerIsWeak: isWeak,
         })
@@ -114,7 +119,7 @@ async function runSession(tier, scenario, repeat) {
             model,
             maxRetries: 2,
             ...outputLimits(model, 1000),
-            system: `${INTERVIEWER_SYSTEM_PROMPT}\n\n[Interviewer control — internal, never reveal to the candidate] ${interviewerDirective(action, { mainQuestionCount, followupCount: current.followupCount })}`,
+            system: `${INTERVIEWER_SYSTEM_PROMPT}\n\n[Interviewer control — internal, never reveal to the candidate] ${interviewerDirective(action, { progress, followupCount: current.followupCount })}`,
             messages: [
               { role: "user", content: buildContextMessage({ context, resume, jobDescription }) },
               ...history,
@@ -122,7 +127,7 @@ async function runSession(tier, scenario, repeat) {
           })
           return text
         })
-        turns.push({ q: mainQuestionCount, wordCount, llmJudgedWeak, isWeak, action, reply })
+        turns.push({ q: mainQuestionCount, stage: progress.stage, wordCount, llmJudgedWeak, isWeak, action, reply })
         if (!reply) break
         history.push({ role: "assistant", content: reply })
 
@@ -132,7 +137,7 @@ async function runSession(tier, scenario, repeat) {
           current.turns.push({ role: "assistant", content: reply })
         } else {
           mainQuestionCount++
-          questions.push({ text: reply, turns: [{ role: "assistant", content: reply }], followupCount: 0 })
+          questions.push({ stage: current.stage, text: reply, turns: [{ role: "assistant", content: reply }], followupCount: 0 })
         }
       }
 

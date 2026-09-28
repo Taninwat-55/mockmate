@@ -5,6 +5,7 @@ import Link from "next/link"
 import { prisma, InterviewSessionStatus, MessageRole, type ModelTier } from "@mockmate/db"
 import { auth } from "@/auth"
 import { interviewTitle } from "@/lib/interview-context"
+import { stageProgress } from "@/lib/interview-engine"
 import { buttonVariants } from "@/components/ui/button"
 import { InterviewChat } from "@/components/interview/InterviewChat"
 import type { InterviewUIMessage } from "@/types/interview-chat"
@@ -38,9 +39,11 @@ export default async function InterviewPage({
       company: true,
       status: true,
       modelTier: true,
+      stages: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
+          stage: true,
           messages: {
             orderBy: { createdAt: "asc" },
             select: { id: true, role: true, content: true },
@@ -95,7 +98,11 @@ export default async function InterviewPage({
           {MODEL_TIER_LABELS[interview.modelTier]}
         </span>
       </header>
-      <InterviewChat sessionId={interview.id} initialMessages={initialMessages} />
+      <InterviewChat
+        sessionId={interview.id}
+        initialMessages={initialMessages}
+        initialProgress={stageProgress(interview.stages, interview.questions)}
+      />
     </main>
   )
 }
