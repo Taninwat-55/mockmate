@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "eval:interview": "node --env-file=.env.local scripts/interview-eval/boot.mjs",
-    "eval:summary": "node scripts/interview-eval/summarize.mjs"
+    "eval:summary": "node scripts/interview-eval/summarize.mjs",
+    "eval:check": "node scripts/interview-eval/check.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",

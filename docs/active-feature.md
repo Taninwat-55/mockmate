@@ -8,7 +8,13 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Nothing in flight — next: #46 multi-stage interviews (planning pass first)._
+- **#46 multi-stage interviews**, part 1 of 3: **#72 stage-aware foundation** (`feature/stage-foundation`)
+  - Scope: `Stage`/`StageVerdict` enums, `InterviewSession.stages` + `roundEndedAt`,
+    `Question.stage`, `StageResult` (defaults backfill every session as one
+    HIRING_MANAGER round); `STAGE_PLANS`, `stageProgress`, `END_STAGE`;
+    `renderSystemPrompt` + directives take round progress; progress indicator in the
+    chat. Free path frozen by `pnpm --filter web eval:check`.
+  - Next: #73 (the loop, owner-only), #74 (rollout to paid). Plan recorded on #46.
 
 ---
 

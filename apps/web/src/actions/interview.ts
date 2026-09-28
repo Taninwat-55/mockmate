@@ -282,6 +282,7 @@ export async function startInterview(
         id: true,
         status: true,
         modelTier: true,
+        stages: true,
         title: true,
         company: true,
         seniority: true,
@@ -331,6 +332,7 @@ export async function startInterview(
         data: {
           interviewSessionId: interview.id,
           questionNumber: 1,
+          stage: interview.stages[0],
           questionText: text,
         },
       })

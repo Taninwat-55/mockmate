@@ -1,10 +1,14 @@
 import type { UIMessage } from "ai"
 
+import type { StageProgress } from "@/lib/interview-engine"
+
 // Metadata the chat route attaches to the streamed assistant message so the client
-// knows when the interview just ended (the 5th question was answered) without polling.
-// Read in `InterviewChat`'s `onFinish` to refresh into the completed state.
+// knows when the interview just ended (the last question was answered) without
+// polling, and where the interview now is for the progress indicator (#72).
+// Read in `InterviewChat`'s `onFinish`.
 export type InterviewMessageMetadata = {
   sessionStatus?: "IN_PROGRESS" | "COMPLETED"
+  progress?: StageProgress
 }
 
 // The app's UIMessage shape — a plain text-part message carrying the metadata above.

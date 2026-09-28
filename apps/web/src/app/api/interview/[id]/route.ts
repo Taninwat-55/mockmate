@@ -17,6 +17,8 @@ import {
 import {
   assessAnswer,
   determineNextAction,
+  progressAfter,
+  stageProgress,
   resolveQuestionStatus,
   MAX_ANSWER_CHARS,
 } from "@/lib/interview-engine"
@@ -135,11 +137,13 @@ export async function POST(
       resume: true,
       jobDescription: true,
       mainQuestionCount: true,
+      stages: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
           id: true,
           questionNumber: true,
+          stage: true,
           questionText: true,
           followupCount: true,
           messages: {
@@ -164,6 +168,7 @@ export async function POST(
     )
   }
   const current = interview.questions.at(-1)
+  const progress = stageProgress(interview.stages, interview.questions)
   if (!current) {
     await releaseTurnLock(id)
     return Response.json(
@@ -257,13 +262,13 @@ export async function POST(
     })
     ;({ isWeak } = assessAnswer(answerText, llmJudgedWeak))
     action = determineNextAction({
-      mainQuestionCount: interview.mainQuestionCount,
+      progress,
       followupCount: current.followupCount,
       answerIsWeak: isWeak,
     })
 
     directive = interviewerDirective(action, {
-      mainQuestionCount: interview.mainQuestionCount,
+      progress,
       followupCount: current.followupCount,
     })
 
@@ -278,6 +283,13 @@ export async function POST(
       },
       { status: 503 },
     )
+  }
+
+  // Multi-round loops (the gate between rounds) arrive in #73; until then every
+  // session is a single round and this is unreachable.
+  if (action === "END_STAGE") {
+    await releaseTurnLock(id)
+    return Response.json({ error: "Multi-round interviews are not available yet." }, { status: 501 })
   }
 
   const model = chatModel(interview.modelTier)
@@ -382,6 +394,7 @@ export async function POST(
           data: {
             interviewSessionId: id,
             questionNumber: current.questionNumber + 1,
+            stage: current.stage,
             questionText: text,
           },
         })
@@ -413,6 +426,8 @@ export async function POST(
 
   return result.toUIMessageStreamResponse<InterviewUIMessage>({
     messageMetadata: ({ part }) =>
-      part.type === "finish" ? { sessionStatus } : undefined,
+      part.type === "finish"
+        ? { sessionStatus, progress: progressAfter(progress, action) }
+        : undefined,
   })
 }

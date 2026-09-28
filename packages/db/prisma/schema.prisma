@@ -142,6 +142,22 @@ enum ModelTier {
   MAX
 }
 
+// Interview rounds (#46). A session's plan is fixed at creation: free is a single
+// HIRING_MANAGER round, paid is the full loop. See STAGE_PLANS in lib/interview-engine.ts.
+enum Stage {
+  SCREENING
+  HIRING_MANAGER
+  ASSESSMENT
+}
+
+// The soft gate after a round in a multi-round loop (#46). INCOMPLETE is set in
+// code when a round has too few answers to judge.
+enum StageVerdict {
+  ADVANCE
+  STOP
+  INCOMPLETE
+}
+
 // ============================================================
 // APP MODELS
 // ============================================================
@@ -160,6 +176,8 @@ model InterviewSession {
   mainQuestionCount Int                    @default(0)
   isPaid            Boolean                @default(false) // true = paid (credit) session → email report, no history cap, credit refund on abandon (#16)
   modelTier         ModelTier              @default(FREE)  // models for this session, set once at creation (#52)
+  stages            Stage[]                @default([HIRING_MANAGER]) // round plan, set once at creation (#46)
+  roundEndedAt      DateTime?                              // set while waiting between rounds (#46); null mid-round
   llmCallCount      Int                    @default(0)     // hard lifetime budget of AI calls for this session — see lib/ai-guard.ts
   turnLockedAt      DateTime?                              // claim lock: at most one AI turn in flight per session; self-expires
   createdAt         DateTime               @default(now())
@@ -168,8 +186,9 @@ model InterviewSession {
 
   // Relations
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions Question[]
-  feedback  Feedback?
+  questions    Question[]
+  feedback     Feedback?
+  stageResults StageResult[]
 
   // Indexes for common queries
   @@index([userId])                        // list sessions per user
@@ -180,7 +199,8 @@ model InterviewSession {
 model Question {
   id                 String         @id @default(cuid())
   interviewSessionId String
-  questionNumber     Int            // 1–5
+  questionNumber     Int            // position in the whole session (1–5 for a single round)
+  stage              Stage          @default(HIRING_MANAGER) // which round this question belongs to (#46)
   questionText       String         @db.Text
   followupCount      Int            @default(0) // max 2
   status             QuestionStatus @default(RESOLVED)
@@ -206,6 +226,22 @@ model Message {
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
+}
+
+// Soft-gate verdict for a round that ended with more rounds to go (#46). The last
+// round of a session is covered by Feedback instead.
+model StageResult {
+  id                 String       @id @default(cuid())
+  interviewSessionId String
+  stage              Stage
+  verdict            StageVerdict
+  summary            String       @db.Text
+  createdAt          DateTime     @default(now())
+
+  // Relations
+  interviewSession InterviewSession @relation(fields: [interviewSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewSessionId, stage]) // one verdict per round; also the idempotency guard
 }
 
 model Feedback {
