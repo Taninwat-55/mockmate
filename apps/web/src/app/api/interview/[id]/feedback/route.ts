@@ -19,7 +19,7 @@ export const maxDuration = 60
 // Idempotent: if a Feedback row already exists, the cached row is returned immediately.
 //
 // The cached-row check is idempotency, NOT a spend guard: N parallel requests all miss
-// it and all run `generateFeedback` — on the Pro model, the priciest call in the app —
+// it and all run `generateFeedback` — deep thinking, the priciest call in the app —
 // before any of them writes the row. So the same turn lock the chat route uses is taken
 // here too (the session is COMPLETED by now, so no chat turn can be contending for it),
 // backed by the per-session call budget and a per-user rate limit.
@@ -42,6 +42,7 @@ export async function POST(
     select: {
       status: true,
       isPaid: true,
+      modelTier: true,
       title: true,
       seniority: true,
       workSetting: true,
@@ -106,7 +107,7 @@ export async function POST(
 
   let result: Awaited<ReturnType<typeof generateFeedback>>
   try {
-    result = await generateFeedback(notes, toInterviewContext(interview), interview.isPaid)
+    result = await generateFeedback(notes, toInterviewContext(interview), interview.modelTier)
   } catch {
     await releaseTurnLock(id)
     return Response.json({ error: "Failed to generate feedback" }, { status: 500 })

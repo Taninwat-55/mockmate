@@ -1,27 +1,40 @@
 import { google } from "@ai-sdk/google"
+import type { ModelTier } from "@mockmate/db"
 
-// Per-session model tiering (#16 / docs/monetization.md). Free sessions run
-// entirely on 2.5 Flash. Paid (credit) sessions upgrade the live flow to the
-// faster 3.5 Flash and the grading to the higher-reasoning 2.5 Pro. Selection is
-// driven by InterviewSession.isPaid — never a global switch. Every call still
-// goes through the Vercel AI SDK (ADR-002), so swapping a provider stays a
-// one-line change here.
+// Per-session model tiers (#52 / docs/monetization.md) — the one place that maps a
+// tier to models. Every tier runs 3.8 Flash in the live interview: the free
+// session is the product demo, and a side-by-side test showed the Flash-Lite
+// models lose track of the interview. Paid sessions think deeper on the
+// per-question notes; MAX (owner only) grades with 3.1 Pro. The tier is stored on
+// InterviewSession.modelTier, never a global switch. Every call still goes
+// through the Vercel AI SDK (ADR-002), so swapping a provider stays a change here.
 
-const FREE_CHAT = google("gemini-2.5-flash")
-const PRO_CHAT = google("gemini-3.5-flash")
-const FREE_GRADING = google("gemini-2.5-flash")
-const PRO_GRADING = google("gemini-2.5-pro")
+const FLASH = google("gemini-3.8-flash")
+const PRO = google("gemini-3.1-pro-preview")
+
+const TIER_MODELS = {
+  FREE: { chat: FLASH, grading: FLASH, noteDepth: "light" },
+  PAID: { chat: FLASH, grading: FLASH, noteDepth: "deep" },
+  MAX: { chat: FLASH, grading: PRO, noteDepth: "deep" },
+} as const satisfies Record<
+  ModelTier,
+  { chat: LanguageModel; grading: LanguageModel; noteDepth: ThinkingDepth }
+>
 
 // Live interview flow — streaming chat + the inline weak-answer judge.
-// Latency-sensitive, so paid uses 3.5 Flash (faster than Pro, sharper than 2.5).
-export function chatModel(isPaid: boolean) {
-  return isPaid ? PRO_CHAT : FREE_CHAT
+export function chatModel(tier: ModelTier) {
+  return TIER_MODELS[tier].chat
 }
 
-// Assessment — hidden per-question eval notes + the final grading matrix. Off the
-// critical path and where quality is most visible, so paid uses 2.5 Pro.
-export function gradingModel(isPaid: boolean) {
-  return isPaid ? PRO_GRADING : FREE_GRADING
+// Assessment — hidden per-question eval notes + the final grading matrix.
+export function gradingModel(tier: ModelTier) {
+  return TIER_MODELS[tier].grading
+}
+
+// Thinking depth for the per-question evaluation note (the grading matrix is
+// always "deep").
+export function noteDepth(tier: ModelTier): ThinkingDepth {
+  return TIER_MODELS[tier].noteDepth
 }
 
 // Output limits for one call (#48). Gemini "thinks" before it answers, and those
@@ -29,17 +42,20 @@ export function gradingModel(isPaid: boolean) {
 // whole budget and truncate the answer. So every call bounds thinking explicitly
 // and gets a cap of thinking headroom + the tokens its answer needs: the answer
 // always fits, and spend per call stays capped (#42).
-// - "light": latency-sensitive calls (chat, judge, per-question note)
+// - "light": latency-sensitive calls (chat, judge; the free-tier per-question note)
 // - "deep":  the end-of-session grading matrix, where quality shows most
 const THINKING = {
   light: { budget: 512, level: "low", headroom: 1024 },
   deep: { budget: 2048, level: "medium", headroom: 4096 },
 } as const
 
+type ThinkingDepth = keyof typeof THINKING
+type LanguageModel = ReturnType<typeof google>
+
 export function outputLimits(
-  model: ReturnType<typeof google>,
+  model: LanguageModel,
   answerTokens: number,
-  depth: keyof typeof THINKING = "light",
+  depth: ThinkingDepth = "light",
 ) {
   const { budget, level, headroom } = THINKING[depth]
   // Gemini 3.x takes a thinking level; 2.5 takes a token budget (Pro's minimum is 128).

@@ -1,5 +1,6 @@
 import { generateObject } from "ai"
 import { z } from "zod"
+import type { ModelTier } from "@mockmate/db"
 
 import { chatModel, outputLimits } from "@/lib/ai"
 import { buildCandidateProfile } from "@/lib/interview-context"
@@ -29,12 +30,12 @@ export async function judgeAnswerWeak({
   context,
   questionText,
   conversation,
-  isPaid,
+  tier,
 }: {
   context: InterviewContext
   questionText: string
   conversation: InterviewTurn[]
-  isPaid: boolean
+  tier: ModelTier
 }): Promise<boolean> {
   const transcript = conversation
     .map(
@@ -43,7 +44,7 @@ export async function judgeAnswerWeak({
     )
     .join("\n\n")
 
-  const model = chatModel(isPaid)
+  const model = chatModel(tier)
   const { object } = await generateObject({
     model,
     schema: judgeSchema,

@@ -1,4 +1,5 @@
 import { generateObject } from "ai"
+import type { ModelTier } from "@mockmate/db"
 
 import { gradingModel, outputLimits } from "@/lib/ai"
 import { buildCandidateProfile } from "@/lib/interview-context"
@@ -33,7 +34,7 @@ Overall summary: exactly 2 sentences — one on what went well, one on the most 
 export async function generateFeedback(
   notes: EvaluationNote[],
   context: InterviewContext,
-  isPaid: boolean,
+  tier: ModelTier,
 ): Promise<GradingFeedback> {
   const notesText = notes
     .map(
@@ -42,7 +43,7 @@ export async function generateFeedback(
     )
     .join("\n\n")
 
-  const model = gradingModel(isPaid)
+  const model = gradingModel(tier)
   const { object } = await generateObject({
     model,
     schema: feedbackSchema,

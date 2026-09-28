@@ -3,7 +3,7 @@
 **Project:** MockMate  
 **Phase:** 2 — Post-MVP  
 **Author:** Taninwat Kaewpankan (Ice)  
-**Last Updated:** 2026-06-13 (revised: Pro models as the paid perk, tiered model matrix, pricing set to 19/79 DKK, subscriptionStatus removed, credit refund on abandonment)  
+**Last Updated:** 2026-09-27 (#52: every tier on 3.8 Flash, paid = deeper grading, owner Max tier, 100/day free cap, measured cost per session). Earlier: 2026-06-13 (tiered model matrix, 19/79 DKK, subscriptionStatus removed, credit refund on abandonment)  
 **Status:** Planned — not yet implemented
 
 ---
@@ -14,7 +14,7 @@ MockMate uses a **pay-per-session credit model**. Users buy credits upfront; eac
 
 This model suits the job-seeker use case: users burst-use the product during an active job search and stop when they're hired. A monthly subscription would generate high churn and unnecessary friction. Credits don't.
 
-**The paid tier's core value is a better AI, not just convenience.** Free sessions run entirely on the cheap base model (Gemini 2.5 Flash). Paid sessions run on stronger models — a faster, sharper model for the live interview and a high-reasoning model for the grading (see the model matrix in §2). Entitlement is `creditBalance` + the weekly free reset; there is no persistent "PRO" account state, which is why the old `subscriptionStatus` enum is being removed (see §5).
+**Every session gets the full interviewer; paying buys depth.** The free session is the product demo, so it runs the same live interviewer as paid (Gemini 3.8 Flash). Paid sessions get deeper grading, the emailed report and full history (see the model matrix in §2). Entitlement is `creditBalance` + the weekly free reset; there is no persistent "PRO" account state, which is why the old `subscriptionStatus` enum is being removed (see §5).
 
 ---
 
@@ -22,9 +22,9 @@ This model suits the job-seeker use case: users burst-use the product during an 
 
 | Tier | Price (DKK) | Price (USD approx.) | Credits | Perks |
 |---|---|---|---|---|
-| Free | 0 DKK | — | 1 / week | Base model (2.5 Flash), web report only, last 3 sessions in history |
-| Single session | 19 DKK | ~$2.70 | 1 | **Pro models** (see matrix) + email feedback report |
-| 5-session pack | 79 DKK | ~$11 | 5 | **Pro models** + email feedback report, full session history |
+| Free | 0 DKK | — | 1 / week | Full AI interviewer, web report only, last 3 sessions in history |
+| Single session | 19 DKK | ~$2.70 | 1 | **Deeper grading** (see matrix) + email feedback report |
+| 5-session pack | 79 DKK | ~$11 | 5 | **Deeper grading** + email feedback report, full session history |
 
 **Free tier:** Users get 1 free session every 7 days, no card required. The cadence is long enough that it doesn't compete with the 25 DKK single session — active job seekers applying to multiple roles will want more than one session per week and will pay. Free users can see only their last 3 sessions in the dashboard history.
 
@@ -41,16 +41,18 @@ This model suits the job-seeker use case: users burst-use the product during an 
 
 ### Model matrix
 
-Which Gemini model serves each step, by tier. Free stays on 2.5 Flash end-to-end to keep cost near zero; paid upgrades the live flow and the grading separately.
+Which Gemini model serves each step, by `InterviewSession.modelTier` (#52). The mapping lives in one place, `apps/web/src/lib/ai.ts`. Billing decides FREE vs PAID; only the owner can pick MAX (or FREE, to see what free users get).
 
-| Step | Free session | Paid session |
-|---|---|---|
-| Live interview chat (streaming) | 2.5 Flash | **3.5 Flash** |
-| Weak-answer judge (inline, follow-up decision) | 2.5 Flash | **3.5 Flash** |
-| Hidden evaluation note (per question) | 2.5 Flash | **2.5 Pro** |
-| Final grading matrix | 2.5 Flash | **2.5 Pro** |
+| Step | FREE | PAID | MAX (owner only) |
+|---|---|---|---|
+| Live interview chat (streaming) | 3.8 Flash, light thinking | 3.8 Flash, light | 3.8 Flash, light |
+| Weak-answer judge (follow-up decision) | 3.8 Flash, light | 3.8 Flash, light | 3.8 Flash, light |
+| Hidden evaluation note (per question) | 3.8 Flash, light | 3.8 Flash, **deep** | **3.1 Pro Preview**, deep |
+| Final grading matrix | 3.8 Flash, deep | 3.8 Flash, deep | **3.1 Pro Preview**, deep |
 
-Rationale: the live flow needs low streaming latency, so paid uses **3.5 Flash** (faster than Pro, sharper than 2.5 Flash). The assessment steps are off the critical path and are where quality is most visible, so paid uses **2.5 Pro**. Running 3.5 Flash across a whole free session would be too expensive — hence free is locked to 2.5 Flash and the upgrade is paid-only. Exact model IDs (`gemini-2.5-flash`, `gemini-3.5-flash`, `gemini-2.5-pro`) to be confirmed against `@ai-sdk/google` at implementation.
+**Why 3.8 Flash everywhere.** A side-by-side test (#52, 25 scripted sessions: 5 configs × 5 candidates, real prompts) compared 2.5 Flash, 3.1 Flash-Lite, 3.5 Flash-Lite, 3.5 Flash + 2.5 Pro, and 3.8 Flash. All were reliable (0 JSON failures, 0 truncations). 3.8 Flash was the fastest (1.3s typical reply) and the most realistic interviewer (most follow-ups on vague answers). The Flash-Lite models are cheaper but lost track of the interview (one closed early and got stuck). The 2.5 models are access-restricted by Google and 3.5 Flash is legacy, so nothing new is built on them. MAX uses 3.1 Pro Preview (a preview model, owner only, about 25 requests/day on the current key ≈ 4 sessions/day).
+
+**Daily free cap.** At most **100 free sessions per UTC day** across the whole site (`FREE_SESSIONS_PER_DAY` in `actions/interview.ts`). A spend guard against traffic spikes and free-session farming with many accounts. Checked before the weekly free is claimed, so a capped user keeps theirs. Paid and owner sessions never count.
 
 ---
 
@@ -78,7 +80,7 @@ else:
 
 The credit deduction and `InterviewSession` creation must happen inside a **Prisma transaction** to prevent race conditions where two concurrent requests could both pass the balance check before either deducts.
 
-`isPaid` on `InterviewSession` now drives three things: (1) whether the feedback report is emailed (free sessions skip it), (2) the dashboard history cap, and (3) **model selection** — paid sessions use the Pro-tier models from the §2 matrix, free sessions use 2.5 Flash. It is set once at creation and never changes.
+`isPaid` on `InterviewSession` now drives three things: (1) whether the feedback report is emailed (free sessions skip it), (2) the dashboard history cap, and (3) the credit refund on abandonment. Model selection moved to its own column, `modelTier` (#52, §2 matrix): PAID for a credit session, FREE for the weekly free, the owner's pick for owner sessions. Both are set once at creation and never change.
 
 ### 3a. Credit refund on abandonment
 
@@ -197,7 +199,7 @@ The billing UI lives in the existing **`/settings`** page (built in #30, current
 
 Be explicit on this page (and on the landing pricing section) about exactly what a credit unlocks, so paying is never a surprise:
 
-- The **Pro AI models** — a sharper interviewer (3.5 Flash) and high-reasoning grading (2.5 Pro), vs the free 2.5 Flash
+- **Deeper AI grading** — the per-question evaluation notes think harder (same live interviewer as free)
 - The **full feedback report emailed** to you
 - **Full session history** (free is capped at the last 3)
 
@@ -237,7 +239,15 @@ When this feature is picked up, implement in this order:
 
 ## 8. Cost Sanity Check
 
-Free sessions run entirely on 2.5 Flash (~$0.004/session). Paid sessions use 3.5 Flash for the live flow plus 2.5 Pro for grading — estimated at roughly **$0.10–0.30/session** (3.5 Flash output is the priciest model at $16.20/1M, but only on paid sessions). A 19 DKK (~$2.70) price still covers a paid session's AI cost ~10×. Exact figures to confirm against current Gemini pricing.
+Measured in the #52 test (full 5-question sessions, every follow-up and the grading included), 3.8 Flash at $0.75 / $3.75 per 1M tokens (in / out incl. thinking):
+
+| Session | AI calls | Cost now | From 2027-01-01 ($1.50 / $7.50) |
+|---|---|---|---|
+| Strong candidate | 17 | ~0.13 DKK | ~0.26 DKK |
+| Typical | 17 | ~0.16 DKK | ~0.33 DKK |
+| Weak candidate (many follow-ups) | 27 | ~0.21 DKK | ~0.43 DKK |
+
+A paid session thinks deeper on its notes, so it lands a little above these. Worst case is bounded by the per-session call budget (50, `lib/ai-guard.ts`) and per-call token caps (`outputLimits()`): about 10 DKK, not reachable in honest use. The real exposure is volume, which the 100/day free cap bounds at roughly 43 DKK/day. One credit sale (19 DKK minus Stripe fees) pays for about 45 free sessions. Also set a monthly spend cap with an alert in Google AI Studio.
 
 At low scale (100 sessions/month, mixed free/paid):
 

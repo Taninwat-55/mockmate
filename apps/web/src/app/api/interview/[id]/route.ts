@@ -125,7 +125,7 @@ export async function POST(
     select: {
       id: true,
       status: true,
-      isPaid: true,
+      modelTier: true,
       title: true,
       seniority: true,
       workSetting: true,
@@ -251,7 +251,7 @@ export async function POST(
       context,
       questionText: current.questionText,
       conversation: currentTurns,
-      isPaid: interview.isPaid,
+      tier: interview.modelTier,
     })
     ;({ isWeak } = assessAnswer(answerText, llmJudgedWeak))
     action = determineNextAction({
@@ -286,7 +286,7 @@ export async function POST(
     )
   }
 
-  const model = chatModel(interview.isPaid)
+  const model = chatModel(interview.modelTier)
   const result = streamText({
     model,
     maxRetries: 2,
@@ -340,7 +340,7 @@ export async function POST(
             context,
             questionText: current.questionText,
             conversation: currentTurns,
-            isPaid: interview.isPaid,
+            tier: interview.modelTier,
           })
         : null
       const status = resolveQuestionStatus({

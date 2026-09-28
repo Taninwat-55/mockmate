@@ -1,6 +1,7 @@
 import { generateObject } from "ai"
+import type { ModelTier } from "@mockmate/db"
 
-import { gradingModel, outputLimits } from "@/lib/ai"
+import { gradingModel, noteDepth, outputLimits } from "@/lib/ai"
 import { buildCandidateProfile } from "@/lib/interview-context"
 import { evaluationNoteSchema, type EvaluationNote } from "@/types/interview"
 import type { InterviewContext, InterviewTurn } from "@/types/interview"
@@ -24,12 +25,12 @@ export async function generateEvaluationNote({
   context,
   questionText,
   conversation,
-  isPaid,
+  tier,
 }: {
   context: InterviewContext
   questionText: string
   conversation: InterviewTurn[]
-  isPaid: boolean
+  tier: ModelTier
 }): Promise<EvaluationNote> {
   const transcript = conversation
     .map(
@@ -38,12 +39,12 @@ export async function generateEvaluationNote({
     )
     .join("\n\n")
 
-  const model = gradingModel(isPaid)
+  const model = gradingModel(tier)
   const { object } = await generateObject({
     model,
     schema: evaluationNoteSchema,
     maxRetries: 2,
-    ...outputLimits(model, 800),
+    ...outputLimits(model, 800, noteDepth(tier)),
     system: EVALUATION_SYSTEM_PROMPT,
     messages: [
       {

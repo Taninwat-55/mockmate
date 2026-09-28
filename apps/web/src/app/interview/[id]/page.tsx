@@ -2,16 +2,24 @@ import { notFound, redirect } from "next/navigation"
 
 import Link from "next/link"
 
-import { prisma, InterviewSessionStatus, MessageRole } from "@mockmate/db"
+import { prisma, InterviewSessionStatus, MessageRole, type ModelTier } from "@mockmate/db"
 import { auth } from "@/auth"
 import { buttonVariants } from "@/components/ui/button"
 import { InterviewChat } from "@/components/interview/InterviewChat"
 import type { InterviewUIMessage } from "@/types/interview-chat"
+import { MODEL_TIER_LABELS } from "@/types/interview"
 
 // The live interview screen. Hydrates the transcript from the DB (so a reload or a
 // resumed session continues from where it left off), then hands off to the streaming
 // chat client. A COMPLETED session shows the end state instead — the graded feedback
 // page is a separate feature (#5).
+// Header badge per model tier (#52).
+const TIER_BADGE: Record<ModelTier, { className: string; title: string }> = {
+  FREE: { className: "bg-muted text-muted-foreground", title: "Free session" },
+  PAID: { className: "bg-foreground text-background", title: "Pro session — deeper grading" },
+  MAX: { className: "bg-amber-500 text-black", title: "Max session — graded by 3.1 Pro (owner)" },
+}
+
 export default async function InterviewPage({
   params,
 }: {
@@ -27,7 +35,7 @@ export default async function InterviewPage({
       id: true,
       title: true,
       status: true,
-      isPaid: true,
+      modelTier: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
@@ -78,17 +86,11 @@ export default async function InterviewPage({
         <h1 className="text-sm font-medium tracking-tight">{interview.title}</h1>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-            interview.isPaid
-              ? "bg-foreground text-background"
-              : "bg-muted text-muted-foreground"
+            TIER_BADGE[interview.modelTier].className
           }`}
-          title={
-            interview.isPaid
-              ? "Pro session — stronger models"
-              : "Free session — base model"
-          }
+          title={TIER_BADGE[interview.modelTier].title}
         >
-          {interview.isPaid ? "Pro" : "Free"}
+          {MODEL_TIER_LABELS[interview.modelTier]}
         </span>
       </header>
       <InterviewChat sessionId={interview.id} initialMessages={initialMessages} />

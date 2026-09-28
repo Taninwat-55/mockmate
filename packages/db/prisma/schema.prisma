@@ -133,6 +133,14 @@ enum EmploymentType {
   INTERNSHIP
 }
 
+// Which models serve a session (#52) — see the matrix in lib/ai.ts. Separate from
+// isPaid: billing decides FREE vs PAID; only the owner can pick MAX (or FREE, to test).
+enum ModelTier {
+  FREE
+  PAID
+  MAX
+}
+
 // ============================================================
 // APP MODELS
 // ============================================================
@@ -148,7 +156,8 @@ model InterviewSession {
   workSetting       WorkSetting?
   employmentType    EmploymentType?
   mainQuestionCount Int                    @default(0)
-  isPaid            Boolean                @default(false) // true = paid (credit) session → Pro models, email report, no history cap (#16)
+  isPaid            Boolean                @default(false) // true = paid (credit) session → email report, no history cap, credit refund on abandon (#16)
+  modelTier         ModelTier              @default(FREE)  // models for this session, set once at creation (#52)
   llmCallCount      Int                    @default(0)     // hard lifetime budget of AI calls for this session — see lib/ai-guard.ts
   turnLockedAt      DateTime?                              // claim lock: at most one AI turn in flight per session; self-expires
   createdAt         DateTime               @default(now())
@@ -163,6 +172,7 @@ model InterviewSession {
   // Indexes for common queries
   @@index([userId])                        // list sessions per user
   @@index([status, lastActiveAt])          // cleanup cron: find IN_PROGRESS older than 24h
+  @@index([isPaid, createdAt])             // site-wide daily free-session cap (#52)
 }
 
 model Question {
