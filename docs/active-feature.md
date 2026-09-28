@@ -8,17 +8,20 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#58 fix: End Interview Early fails silently** (`fix/end-early-silent-failure`)
-  - Scope: catch thrown Server Action errors (stale action ID after a deploy, network)
-    in every client-side call and show a toast: `endInterviewEarly`, `startInterview`,
-    `createInterviewSession` (success redirect rethrown), `updateSavedResume`,
-    `submitFeedbackRating`.
-  - Acceptance: failing end-early shows an error toast; same for the other calls;
-    `pnpm build` passes.
+- **#52 feat: model tiers per plan** (`feature/model-tiers`)
+  - Scope: one tier → model mapping in `lib/ai.ts` with an explicit owner tier; owner
+    defaults to Paid, owner-only "max" toggle; free-tier model change only if a
+    side-by-side test (5 sessions each) holds up; cost per session per tier in
+    `docs/monetization.md`; every tier works with `outputLimits()`.
+  - Acceptance: see #52.
 
 ---
 
 ## History
+
+- 2026-09-26  End Early silent failure (#58, PR #59): thrown Server Action errors
+  (stale action ID after a deploy, network) now toast in all 5 client-side calls;
+  `createInterviewSession` rethrows its success redirect via `unstable_rethrow`.  ✓
 
 - 2026-09-24  Email via Resend, AWS Lambda removed (#54, PR #55): paid-session summary
   email sent from the feedback route with `after()` via Resend's HTTP API

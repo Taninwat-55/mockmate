@@ -6,7 +6,7 @@ import { unstable_rethrow } from "next/navigation"
 import { FileUp } from "lucide-react"
 import { toast } from "sonner"
 
-import type { EmploymentType, Seniority, WorkSetting } from "@mockmate/db"
+import type { EmploymentType, ModelTier, Seniority, WorkSetting } from "@mockmate/db"
 
 import { updateSavedResume } from "@/actions/account"
 import { createInterviewSession } from "@/actions/interview"
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ChipGroup } from "@/components/interview/ChipGroup"
 import {
   EMPLOYMENT_TYPE_LABELS,
+  MODEL_TIER_LABELS,
   SENIORITY_LABELS,
   WORK_SETTING_LABELS,
 } from "@/types/interview"
@@ -80,6 +81,8 @@ export function NewInterviewForm({
   // The user's pick when they hold both a credit and a free session. Defaults to
   // the free session so a credit is never spent without an explicit choice.
   const [preferCredit, setPreferCredit] = useState(false)
+  // Owner only (#52): defaults to Pro, so the owner tests what customers get.
+  const [ownerTier, setOwnerTier] = useState<ModelTier>("PAID")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // The saved CV is showing as long as the user hasn't edited it.
@@ -163,6 +166,7 @@ export function NewInterviewForm({
           jobDescription,
           // Only meaningful when both are available; otherwise the server decides.
           preferCredit: bothAvailable ? preferCredit : undefined,
+          ownerTier: isOwner ? ownerTier : undefined,
         })
         // On success the action redirects, so we only get here on failure.
         if (result && !result.success) {
@@ -301,11 +305,14 @@ export function NewInterviewForm({
       </div>
 
       {isOwner && (
-        <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Owner</span> — unlimited
-          Pro. Every session runs on the Pro models; no credit or weekly free is
-          used.
-        </p>
+        <ChipGroup
+          label="Models (owner)"
+          hint="Pro is what paying customers get. Max grades with 3.1 Pro (about 4 a day). No credit or weekly free is used."
+          options={MODEL_TIER_LABELS}
+          value={ownerTier}
+          onChange={(value) => value && setOwnerTier(value)}
+          disabled={busy}
+        />
       )}
 
       {bothAvailable && (
@@ -323,8 +330,8 @@ export function NewInterviewForm({
               className="mt-1"
             />
             <span>
-              <span className="font-medium">Free weekly session</span> — base
-              model (Flash). Resets every 7 days.
+              <span className="font-medium">Free weekly session</span> — full
+              interview, web report. Resets every 7 days.
             </span>
           </label>
           <label className="flex cursor-pointer items-start gap-2 text-sm">
@@ -338,7 +345,7 @@ export function NewInterviewForm({
             />
             <span>
               <span className="font-medium">Use 1 credit — Pro interview</span> —
-              sharper interviewer and grading. You have {credits}.
+              deeper grading, emailed report. You have {credits}.
             </span>
           </label>
         </fieldset>
@@ -355,8 +362,7 @@ export function NewInterviewForm({
       {onlyFree && (
         <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           Using your{" "}
-          <span className="font-medium text-foreground">free weekly session</span>{" "}
-          (base model).{" "}
+          <span className="font-medium text-foreground">free weekly session</span>.{" "}
           <Link href="/buy" className="underline">
             Buy credits
           </Link>{" "}

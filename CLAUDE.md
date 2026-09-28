@@ -48,7 +48,7 @@ These map to `prisma` commands run inside `packages/db`. If you ever need to cal
 | Database | Neon PostgreSQL + Prisma v7 | Serverless Postgres, type-safe queries |
 | Auth | NextAuth v5 beta + Google OAuth | Google-only for MVP, no password storage |
 | AI | Vercel AI SDK + `@ai-sdk/google` | Provider abstraction — swap Gemini for GPT/Claude by changing one import |
-| LLM | Google Gemini, tiered per session (`lib/ai.ts`) | Free: 2.5 Flash. Paid: 3.5 Flash chat + 2.5 Pro grading |
+| LLM | Google Gemini, tiered per session (`lib/ai.ts`, `InterviewSession.modelTier`) | All tiers: 3.8 Flash. Paid: deeper grading. Owner Max: 3.1 Pro grading |
 | Analytics | PostHog | Events: `session_started`, `session_completed`, `feedback_rated` |
 | Email | Resend (HTTP API) via Next.js `after()` | Async post-session summary for paid sessions, non-blocking — no AWS (#54) |
 | Styling | Tailwind v4 + PostCSS | PostCSS required by Next.js; not needed in Vite-based projects |

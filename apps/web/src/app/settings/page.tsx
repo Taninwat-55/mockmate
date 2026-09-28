@@ -78,10 +78,10 @@ export default async function SettingsPage() {
           <CardContent className="space-y-5">
             {user.isOwner ? (
               <div>
-                <p className="text-sm font-medium">Owner — unlimited Pro</p>
+                <p className="text-sm font-medium">Owner — unlimited interviews</p>
                 <p className="text-sm text-muted-foreground">
-                  Every interview runs on the Pro models. You&apos;re never
-                  charged a credit or the weekly free session.
+                  Pick Free, Pro or Max models for each interview. You&apos;re
+                  never charged a credit or the weekly free session.
                 </p>
               </div>
             ) : (
@@ -120,8 +120,8 @@ export default async function SettingsPage() {
             </div>
 
                 <p className="text-xs text-muted-foreground">
-                  Credits unlock the Pro models (sharper interviewer and grading),
-                  the full feedback report by email, and full session history. A
+                  Credits unlock deeper AI grading, the full feedback report by
+                  email, and full session history. A
                   single session is 19&nbsp;DKK, or a 5-session pack for
                   79&nbsp;DKK.
                 </p>

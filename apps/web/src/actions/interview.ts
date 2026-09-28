@@ -10,6 +10,7 @@ import {
   InterviewSessionStatus,
   MessageRole,
   MessageType,
+  ModelTier,
   Seniority,
   WorkSetting,
 } from "@mockmate/db"
@@ -60,7 +61,16 @@ const newInterviewSchema = z.object({
   // available. The server is authoritative — this is treated as intent, then
   // re-checked against the real balance below.
   preferCredit: z.boolean().optional(),
+  // Owner-only model tier pick (#52). Ignored for everyone else — their tier
+  // follows what they pay with.
+  ownerTier: z.enum(ModelTier).optional(),
 })
+
+// Site-wide ceiling on free sessions per UTC day (#52). A spend guard for a
+// traffic spike or free-session farming across many accounts; paid and owner
+// sessions never count. A soft cap — two starts in the same instant can both take
+// the last slot, which is fine at this scale.
+const FREE_SESSIONS_PER_DAY = 100
 
 export type NewInterviewInput = z.input<typeof newInterviewSchema>
 
@@ -90,8 +100,8 @@ export async function createInterviewSession(
     }
   }
 
-  // Entitlement (#16): a session is paid (Pro models) if it spends a credit, or
-  // free (Flash) if it uses the weekly allowance. When the user has both, honour
+  // Entitlement (#16): a session is paid if it spends a credit, or free if it
+  // uses the weekly allowance; the model tier follows from that (#52). When the user has both, honour
   // their pick; with only one available, decide automatically; with neither,
   // block and point them to /buy.
   const user = await prisma.user.findUnique({
@@ -108,7 +118,8 @@ export async function createInterviewSession(
 
   let usePaid: boolean
   if (user.isOwner) {
-    // Platform owner: always Pro, never consumes a credit or the weekly free.
+    // Platform owner: paid perks, never consumes a credit or the weekly free.
+    // The models come from their own tier pick (below).
     usePaid = true
   } else if (creditAvailable && freeAvailable) {
     usePaid = parsed.data.preferCredit ?? false
@@ -129,6 +140,12 @@ export async function createInterviewSession(
     }
   }
 
+  const modelTier: ModelTier = user.isOwner
+    ? (parsed.data.ownerTier ?? ModelTier.PAID)
+    : usePaid
+      ? ModelTier.PAID
+      : ModelTier.FREE
+
   // Spend the entitlement and create the session atomically. The conditional
   // updates (gt:0 / lte:now) are the race guard: two concurrent starts can't both
   // win the same credit or the same weekly free.
@@ -144,6 +161,15 @@ export async function createInterviewSession(
           })
           if (spent.count !== 1) throw new Error("ENTITLEMENT_RACE")
         } else {
+          // Check the daily cap before claiming, so a capped user keeps their weekly free.
+          const dayStart = new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+          )
+          const freeToday = await tx.interviewSession.count({
+            where: { isPaid: false, createdAt: { gte: dayStart } },
+          })
+          if (freeToday >= FREE_SESSIONS_PER_DAY) throw new Error("FREE_DAILY_CAP")
+
           const next = new Date(now.getTime() + 7 * 86_400_000)
           const claimed = await tx.user.updateMany({
             where: { id: session.user.id, freeSessionRefreshAt: { lte: now } },
@@ -163,12 +189,20 @@ export async function createInterviewSession(
           workSetting: parsed.data.workSetting,
           employmentType: parsed.data.employmentType,
           isPaid: usePaid,
+          modelTier,
           // status defaults to IN_PROGRESS in the schema
         },
         select: { id: true },
       })
     })
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message === "FREE_DAILY_CAP") {
+      return {
+        success: false,
+        error:
+          "Today's free interviews are all taken. Come back tomorrow, or start one now with a credit.",
+      }
+    }
     return {
       success: false,
       error: "Couldn't start the interview. Please try again.",
@@ -185,6 +219,7 @@ export async function createInterviewSession(
         role_title: parsed.data.title,
         seniority: parsed.data.seniority,
         tier: usePaid ? "paid" : "free",
+        model_tier: modelTier,
       },
     })
   } catch {}
@@ -237,7 +272,7 @@ export async function startInterview(
       select: {
         id: true,
         status: true,
-        isPaid: true,
+        modelTier: true,
         title: true,
         seniority: true,
         workSetting: true,
@@ -268,7 +303,7 @@ export async function startInterview(
       return { success: false, error: "This interview has reached its limit." }
     }
 
-    const model = chatModel(interview.isPaid)
+    const model = chatModel(interview.modelTier)
     const { text } = await generateText({
       model,
       maxRetries: 2,

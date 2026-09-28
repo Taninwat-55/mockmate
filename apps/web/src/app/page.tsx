@@ -315,7 +315,7 @@ export default async function Home() {
                 </div>
                 <p className="mt-2 text-[14px] text-muted-foreground">Try it first. No card required.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["1 free session per week", "Base AI model (Flash)", "Full graded feedback report", "Up to 2 follow-ups per question", "Last 3 sessions in history"].map((f) => (
+                  {["1 free session per week", "Full AI interviewer", "Full graded feedback report", "Up to 2 follow-ups per question", "Last 3 sessions in history"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}
@@ -336,7 +336,7 @@ export default async function Home() {
                 </div>
                 <p className="mt-2 text-[14px] text-muted-foreground">Before an interview. One credit.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["Pro AI models — sharper interviewer & grading", "1 interview session", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you"].map((f) => (
+                  {["Deeper AI grading", "1 interview session", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}
@@ -360,7 +360,7 @@ export default async function Home() {
                 </div>
                 <p className="mt-2 text-[14px] text-muted-foreground">During a job search. Save ~17%.</p>
                 <ul className="mt-6 space-y-3 text-[14px] text-muted-foreground">
-                  {["Pro AI models — sharper interviewer & grading", "5 interview sessions", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you", "Full session history", "~16 DKK per session"].map((f) => (
+                  {["Deeper AI grading", "5 interview sessions", "Full graded feedback report", "Up to 2 follow-ups per question", "Feedback report emailed to you", "Full session history", "~16 DKK per session"].map((f) => (
                     <li key={f} className="flex gap-2.5">
                       <span className="mt-[7px] inline-block size-1.5 shrink-0 rotate-45 bg-foreground" />
                       {f}
