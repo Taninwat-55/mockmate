@@ -111,6 +111,7 @@ enum OverallSignal {
   HIRE
   NO_HIRE
   STRONG_HIRE
+  INCOMPLETE // too few answered questions for a hiring verdict — set in code, never by the model (#63)
 }
 
 // Interview context (#44) — picked on the setup form, used to calibrate prompts.

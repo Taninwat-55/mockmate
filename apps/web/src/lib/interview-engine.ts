@@ -21,6 +21,10 @@ export const MIN_ANSWER_WORDS = 40
 // the single source of truth; #4's chat route enforces it on incoming answers.
 export const MAX_ANSWER_CHARS = 2000
 
+// Fewer answered main questions than this and the grade gets no hiring verdict
+// (OverallSignal.INCOMPLETE) — two answers are not enough to judge (#63).
+export const MIN_QUESTIONS_FOR_VERDICT = 3
+
 // Count words by runs of non-whitespace. Empty / whitespace-only input is 0.
 export function countWords(text: string): number {
   const matches = text.trim().match(/\S+/g)

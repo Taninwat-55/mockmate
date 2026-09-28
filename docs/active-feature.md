@@ -8,16 +8,23 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#52 feat: model tiers per plan** (`feature/model-tiers`)
-  - Scope: one tier → model mapping in `lib/ai.ts` with an explicit owner tier; owner
-    defaults to Paid, owner-only "max" toggle; free-tier model change only if a
-    side-by-side test (5 sessions each) holds up; cost per session per tier in
-    `docs/monetization.md`; every tier works with `outputLimits()`.
-  - Acceptance: see #52.
+- **#63 fix: question-count drift + lenient grading** (`fix/grading-and-question-count`)
+  - Scope: directives carry "main question N of 5"; evidence floor (< 3 answered →
+    `INCOMPLETE`, "Not enough to judge", also at display time); anchored grading
+    rubric + code guard on STRONG_HIRE; judge/eval notes treat polished-but-generic
+    answers as weak; rambling costs communication. Committed eval harness
+    (`apps/web/scripts/interview-eval`) for before/after measurement.
+  - Acceptance: see #63.
 
 ---
 
 ## History
+
+- 2026-09-28  Model tiers per plan + daily free cap (#52, PR #64): `ModelTier`
+  (FREE/PAID/MAX) on `InterviewSession`, one tier map in `lib/ai.ts`; all tiers on
+  3.8 Flash live, paid thinks deeper on eval notes, owner MAX grades with 3.1 Pro.
+  Owner Free/Pro/Max picker + tier badge. 100 free sessions/UTC day, checked before
+  the weekly free is claimed. Side-by-side test (25 sessions) in the PR.  ✓
 
 - 2026-09-26  End Early silent failure (#58, PR #59): thrown Server Action errors
   (stale action ID after a deploy, network) now toast in all 5 client-side calls;

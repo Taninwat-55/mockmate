@@ -12,6 +12,7 @@ import { chatModel, outputLimits } from "@/lib/ai"
 import {
   INTERVIEWER_SYSTEM_PROMPT,
   buildContextMessage,
+  interviewerDirective,
 } from "@/lib/interviewer-prompt"
 import {
   assessAnswer,
@@ -260,18 +261,10 @@ export async function POST(
       answerIsWeak: isWeak,
     })
 
-    if (action === "ASK_FOLLOWUP") {
-      directive =
-        current.followupCount === 0
-          ? "The candidate's answer was weak — vague, too short, or missing substance relevant to the question and the role. Ask one pointed follow-up that makes them be specific or explain their reasoning. Do not give them the answer."
-          : "The candidate's answer is still weak after one follow-up. Ask one final follow-up; you may add a light hint or nudge to avoid a dead end. Do not follow up again after this."
-    } else if (action === "END_SESSION") {
-      directive =
-        "This was the final main question of the interview. Give one short closing line to wrap up. Do not ask any further question."
-    } else {
-      directive =
-        "Move on to your next main question now. Choose it from the candidate's resume and the target role, and ask exactly one question."
-    }
+    directive = interviewerDirective(action, {
+      mainQuestionCount: interview.mainQuestionCount,
+      followupCount: current.followupCount,
+    })
 
     sessionStatus = action === "END_SESSION" ? "COMPLETED" : "IN_PROGRESS"
   } catch (err) {
