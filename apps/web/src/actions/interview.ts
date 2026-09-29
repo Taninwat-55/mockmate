@@ -16,11 +16,13 @@ import {
 } from "@mockmate/db"
 import { auth } from "@/auth"
 import { chatModel, outputLimits } from "@/lib/ai"
-import { buildInterviewMessages } from "@/lib/interviewer-prompt"
+import { buildInterviewMessages, buildStageOpeningMessages } from "@/lib/interviewer-prompt"
+import { STAGE_PLANS, stageProgress, type StageProgress } from "@/lib/interview-engine"
 import { toInterviewContext } from "@/lib/interview-context"
 import {
   acquireTurnLock,
   claimLlmCalls,
+  llmBudget,
   releaseTurnLock,
 } from "@/lib/ai-guard"
 import { limitUser } from "@/lib/rate-limit"
@@ -154,6 +156,10 @@ export async function createInterviewSession(
       ? ModelTier.PAID
       : ModelTier.FREE
 
+  // Round plan (#73): the multi-round loop is owner-only while it's being tested;
+  // everyone else, and the owner picking Free, gets the single 5-question round.
+  const stages = user.isOwner && modelTier !== ModelTier.FREE ? STAGE_PLANS.LOOP : STAGE_PLANS.SINGLE
+
   // Spend the entitlement and create the session atomically. The conditional
   // updates (gt:0 / lte:now) are the race guard: two concurrent starts can't both
   // win the same credit or the same weekly free.
@@ -199,6 +205,7 @@ export async function createInterviewSession(
           employmentType: parsed.data.employmentType,
           isPaid: usePaid,
           modelTier,
+          stages: [...stages],
           // status defaults to IN_PROGRESS in the schema
         },
         select: { id: true },
@@ -310,7 +317,7 @@ export async function startInterview(
       return { success: true, question: { id: existing.id, text: existing.content } }
     }
 
-    if (!(await claimLlmCalls(sessionId, 1))) {
+    if (!(await claimLlmCalls(sessionId, 1, llmBudget(interview.stages)))) {
       return { success: false, error: "This interview has reached its limit." }
     }
 
@@ -324,6 +331,8 @@ export async function startInterview(
         resume: interview.resume,
         jobDescription: interview.jobDescription,
         candidateName: session.user.name,
+        // A loop opens as its first round (#73); a single round keeps today's opening.
+        progress: interview.stages.length > 1 ? stageProgress(interview.stages, []) : undefined,
       }),
     })
 
@@ -358,6 +367,146 @@ export async function startInterview(
       success: false,
       error: "Couldn't start the interview. Please try again.",
     }
+  } finally {
+    await releaseTurnLock(sessionId)
+  }
+}
+
+type ContinueResult =
+  | { success: true; question: { id: string; text: string }; progress: StageProgress }
+  | { success: false; error: string }
+
+// Open the next round of a multi-round loop (#73), called from the gate between
+// rounds. Mirrors `startInterview`: the turn lock serialises it, and it is
+// idempotent — if the next round has already started (a double click, a retry after
+// a dropped response), the existing opening question is returned instead of a new one.
+export async function continueToNextStage(sessionId: string): Promise<ContinueResult> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: "You need to be signed in." }
+  }
+
+  const limit = await limitUser("startInterview", session.user.id)
+  if (!limit.ok) {
+    return { success: false, error: "You're going too fast. Please try again shortly." }
+  }
+
+  if (!(await acquireTurnLock(sessionId, session.user.id))) {
+    return { success: false, error: "The next round is already starting. Give it a moment." }
+  }
+
+  try {
+    const interview = await prisma.interviewSession.findFirst({
+      where: { id: sessionId, userId: session.user.id },
+      select: {
+        id: true,
+        status: true,
+        roundEndedAt: true,
+        modelTier: true,
+        stages: true,
+        title: true,
+        company: true,
+        seniority: true,
+        workSetting: true,
+        employmentType: true,
+        resume: true,
+        jobDescription: true,
+        questions: {
+          orderBy: { questionNumber: "asc" },
+          select: {
+            questionNumber: true,
+            stage: true,
+            messages: {
+              orderBy: { createdAt: "asc" },
+              select: { id: true, role: true, type: true, content: true },
+            },
+          },
+        },
+      },
+    })
+    if (!interview) {
+      return { success: false, error: "Interview not found." }
+    }
+    if (interview.status !== InterviewSessionStatus.IN_PROGRESS) {
+      return { success: false, error: "This interview has already ended." }
+    }
+
+    const progress = stageProgress(interview.stages, interview.questions)
+    const last = interview.questions.at(-1)
+
+    // Already continued: the latest question opens a round after the first one.
+    if (!interview.roundEndedAt) {
+      const opening = last?.messages[0]
+      if (last && progress.round > 1 && progress.question === 1 && opening) {
+        return { success: true, question: { id: opening.id, text: opening.content }, progress }
+      }
+      return { success: false, error: "There is no finished round to continue from." }
+    }
+
+    const nextStage = interview.stages[progress.round]
+    if (!last || !nextStage) {
+      return { success: false, error: "There is no next round." }
+    }
+
+    if (!(await claimLlmCalls(sessionId, 1, llmBudget(interview.stages)))) {
+      return { success: false, error: "This interview has reached its limit." }
+    }
+
+    const nextProgress = stageProgress(interview.stages, [...interview.questions, { stage: nextStage }])
+    const history = interview.questions.flatMap((q) =>
+      q.messages.map((m) => ({
+        role: m.role === MessageRole.AI ? ("assistant" as const) : ("user" as const),
+        content: m.content,
+      })),
+    )
+
+    const model = chatModel(interview.modelTier)
+    const { text } = await generateText({
+      model,
+      maxRetries: 2,
+      ...outputLimits(model, 1000),
+      messages: buildStageOpeningMessages({
+        context: toInterviewContext(interview),
+        resume: interview.resume,
+        jobDescription: interview.jobDescription,
+        candidateName: session.user.name,
+        progress: nextProgress,
+        history,
+      }),
+    })
+
+    const message = await prisma.$transaction(async (tx) => {
+      const question = await tx.question.create({
+        data: {
+          interviewSessionId: interview.id,
+          questionNumber: last.questionNumber + 1,
+          stage: nextStage,
+          questionText: text,
+        },
+      })
+      const created = await tx.message.create({
+        data: {
+          questionId: question.id,
+          role: MessageRole.AI,
+          type: MessageType.MAIN_QUESTION,
+          content: text,
+        },
+        select: { id: true, content: true },
+      })
+      await tx.interviewSession.update({
+        where: { id: interview.id },
+        data: {
+          mainQuestionCount: { increment: 1 },
+          roundEndedAt: null,
+          lastActiveAt: new Date(),
+        },
+      })
+      return created
+    })
+
+    return { success: true, question: { id: message.id, text: message.content }, progress: nextProgress }
+  } catch {
+    return { success: false, error: "Couldn't start the next round. Please try again." }
   } finally {
     await releaseTurnLock(sessionId)
   }

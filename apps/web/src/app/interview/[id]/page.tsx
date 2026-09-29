@@ -40,6 +40,7 @@ export default async function InterviewPage({
       status: true,
       modelTier: true,
       stages: true,
+      roundEndedAt: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
@@ -102,6 +103,8 @@ export default async function InterviewPage({
         sessionId={interview.id}
         initialMessages={initialMessages}
         initialProgress={stageProgress(interview.stages, interview.questions)}
+        stages={interview.stages}
+        initialRoundEnded={interview.roundEndedAt !== null}
       />
     </main>
   )

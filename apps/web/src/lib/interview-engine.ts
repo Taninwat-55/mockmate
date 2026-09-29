@@ -42,9 +42,10 @@ export function isAnswerTooShort(text: string): boolean {
 export function assessAnswer(
   text: string,
   llmJudgedWeak: boolean,
+  minWords: number = MIN_ANSWER_WORDS,
 ): AnswerAssessment {
   const wordCount = countWords(text)
-  const tooShort = wordCount < MIN_ANSWER_WORDS
+  const tooShort = wordCount < minWords
   return { wordCount, tooShort, isWeak: tooShort || llmJudgedWeak }
 }
 
@@ -59,16 +60,22 @@ const LOOP_ROUND_QUESTIONS: Record<Stage, number> = {
   SCREENING: 3,
   HIRING_MANAGER: 4,
   ASSESSMENT: 3,
+  FINAL: 2,
 }
 
 export const STAGE_PLANS = {
   SINGLE: ["HIRING_MANAGER"],
-  LOOP: ["SCREENING", "HIRING_MANAGER", "ASSESSMENT"],
+  LOOP: ["SCREENING", "HIRING_MANAGER", "ASSESSMENT", "FINAL"],
 } as const satisfies Record<string, readonly Stage[]>
 
 // How many main questions a round has within its plan.
 export function questionsInRound(stages: readonly Stage[], stage: Stage): number {
   return stages.length === 1 ? SINGLE_ROUND_QUESTIONS : LOOP_ROUND_QUESTIONS[stage]
+}
+
+// Total main questions in a plan: 5 for a single round, 12 for the loop.
+export function plannedQuestions(stages: readonly Stage[]): number {
+  return stages.reduce((sum, stage) => sum + questionsInRound(stages, stage), 0)
 }
 
 // Where the interview is: the current round (the round of the latest question, or
@@ -96,6 +103,16 @@ export function stageProgress(
     questions: questionsInRound(stages, stage),
     isLastStage: index === stages.length - 1,
   }
+}
+
+// The "too short" floor for an answer in this round (#73). Screening answers to
+// practical questions ("I can start on 1 March") are short but fine, and final-round
+// answers are often the candidate's own questions. A single round keeps 40.
+export function minAnswerWords(progress: Pick<StageProgress, "stage" | "rounds">): number {
+  if (progress.rounds === 1) return MIN_ANSWER_WORDS
+  if (progress.stage === "SCREENING") return 15
+  if (progress.stage === "FINAL") return 20
+  return MIN_ANSWER_WORDS
 }
 
 // What the progress indicator shows once the interviewer's reply to `action` is out:

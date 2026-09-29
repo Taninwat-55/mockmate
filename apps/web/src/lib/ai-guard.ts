@@ -1,4 +1,4 @@
-import { prisma } from "@mockmate/db"
+import { prisma, type Stage } from "@mockmate/db"
 
 // ============================================================
 // Per-session AI spend ceiling + turn lock
@@ -23,13 +23,26 @@ import { prisma } from "@mockmate/db"
 //   still putting a hard, calculable euro ceiling on any single session.
 export const MAX_LLM_CALLS_PER_SESSION = 50
 
+// A multi-round loop (#73) has more to spend. Worst case, honestly used:
+//   4  openings        — the first question + 3 round handovers
+//   72 answer turns    — 12 questions x 3 answers x (judge + reply)
+//   12 evaluation notes, 3 round verdicts, 1 final grading pass
+//   = 92, capped at 120 with the same headroom for retries.
+export const MAX_LLM_CALLS_PER_LOOP = 120
+
+// The lifetime AI-call budget for a session with this round plan.
+export function llmBudget(stages: readonly Stage[]): number {
+  return stages.length > 1 ? MAX_LLM_CALLS_PER_LOOP : MAX_LLM_CALLS_PER_SESSION
+}
+
 // How long a turn may hold the lock before another request may steal it. Above
 // the routes' `maxDuration = 60` so a running turn is never cut off, but short
 // enough that a crashed or client-aborted turn frees up quickly on its own.
 const TURN_LOCK_MS = 90_000
 
 /**
- * Atomically reserve `calls` model calls against this session's lifetime budget.
+ * Atomically reserve `calls` model calls against this session's lifetime budget
+ * (`llmBudget(stages)`; single-round sessions may omit it).
  * Returns false when the budget is exhausted — the caller must then make no AI
  * call at all.
  *
@@ -39,12 +52,13 @@ const TURN_LOCK_MS = 90_000
 export async function claimLlmCalls(
   sessionId: string,
   calls: number,
+  budget: number = MAX_LLM_CALLS_PER_SESSION,
 ): Promise<boolean> {
   try {
     const { count } = await prisma.interviewSession.updateMany({
       where: {
         id: sessionId,
-        llmCallCount: { lte: MAX_LLM_CALLS_PER_SESSION - calls },
+        llmCallCount: { lte: budget - calls },
       },
       data: { llmCallCount: { increment: calls } },
     })

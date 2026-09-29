@@ -6,6 +6,7 @@ import { sendSessionSummaryEmail } from "@/lib/session-summary-email"
 import {
   acquireTurnLock,
   claimLlmCalls,
+  llmBudget,
   releaseTurnLock,
 } from "@/lib/ai-guard"
 import { limitUser, tooManyRequests } from "@/lib/rate-limit"
@@ -43,6 +44,7 @@ export async function POST(
       status: true,
       isPaid: true,
       modelTier: true,
+      stages: true,
       title: true,
       company: true,
       seniority: true,
@@ -86,19 +88,18 @@ export async function POST(
   const questions = await prisma.question.findMany({
     where: { interviewSessionId: id },
     orderBy: { questionNumber: "asc" },
-    select: { evaluationNote: true },
+    select: { evaluationNote: true, stage: true },
   })
 
-  const notes: EvaluationNote[] = questions
-    .filter((q) => q.evaluationNote !== null)
-    .map((q) => parseEvaluationNote(q.evaluationNote as string))
+  const graded = questions.filter((q) => q.evaluationNote !== null)
+  const notes: EvaluationNote[] = graded.map((q) => parseEvaluationNote(q.evaluationNote as string))
 
   if (notes.length === 0) {
     await releaseTurnLock(id)
     return Response.json({ error: "No evaluation notes found" }, { status: 422 })
   }
 
-  if (!(await claimLlmCalls(id, 1))) {
+  if (!(await claimLlmCalls(id, 1, llmBudget(interview.stages)))) {
     await releaseTurnLock(id)
     return Response.json(
       { error: "This interview has reached its limit." },
@@ -108,7 +109,20 @@ export async function POST(
 
   let result: Awaited<ReturnType<typeof generateFeedback>>
   try {
-    result = await generateFeedback(notes, toInterviewContext(interview), interview.modelTier)
+    // A multi-round loop is graded per round, and a STOP at any gate caps the
+    // verdict (#73). A single round passes nothing, so it grades exactly as before.
+    const loop =
+      interview.stages.length > 1
+        ? {
+            stages: interview.stages,
+            noteStages: graded.map((q) => q.stage),
+            anyStop:
+              (await prisma.stageResult.count({
+                where: { interviewSessionId: id, verdict: "STOP" },
+              })) > 0,
+          }
+        : undefined
+    result = await generateFeedback(notes, toInterviewContext(interview), interview.modelTier, loop)
   } catch {
     await releaseTurnLock(id)
     return Response.json({ error: "Failed to generate feedback" }, { status: 500 })
