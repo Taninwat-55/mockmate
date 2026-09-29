@@ -1,4 +1,4 @@
-import { streamText } from "ai"
+import { createUIMessageStream, createUIMessageStreamResponse, generateText, streamText } from "ai"
 import { z } from "zod"
 
 import {
@@ -10,13 +10,15 @@ import {
 import { auth } from "@/auth"
 import { chatModel, outputLimits } from "@/lib/ai"
 import {
-  INTERVIEWER_SYSTEM_PROMPT,
   buildContextMessage,
   interviewerDirective,
+  safeClosing,
+  systemPromptFor,
 } from "@/lib/interviewer-prompt"
 import {
   assessAnswer,
   determineNextAction,
+  minAnswerWords,
   progressAfter,
   stageProgress,
   resolveQuestionStatus,
@@ -28,6 +30,7 @@ import { toInterviewContext } from "@/lib/interview-context"
 import {
   acquireTurnLock,
   claimLlmCalls,
+  llmBudget,
   releaseTurnLock,
 } from "@/lib/ai-guard"
 import { limitUser, tooManyRequests } from "@/lib/rate-limit"
@@ -138,6 +141,7 @@ export async function POST(
       jobDescription: true,
       mainQuestionCount: true,
       stages: true,
+      roundEndedAt: true,
       questions: {
         orderBy: { questionNumber: "asc" },
         select: {
@@ -167,8 +171,21 @@ export async function POST(
       { status: 409 },
     )
   }
+  // Between rounds (#73) there is no open question: the candidate continues via
+  // `continueToNextStage`. Checked before the retry branch below, which would
+  // otherwise treat the round's last saved answer as an un-replied turn.
+  if (interview.roundEndedAt) {
+    await releaseTurnLock(id)
+    return Response.json(
+      { error: "This round is over. Continue to the next round to keep going." },
+      { status: 409 },
+    )
+  }
   const current = interview.questions.at(-1)
   const progress = stageProgress(interview.stages, interview.questions)
+  // Round-aware judging and notes only for multi-round loops; a single round
+  // passes nothing, so its model inputs stay exactly as before.
+  const loopStage = progress.rounds > 1 ? progress.stage : undefined
   if (!current) {
     await releaseTurnLock(id)
     return Response.json(
@@ -242,7 +259,7 @@ export async function POST(
   // Reserve this turn's two model calls (judge + reply) against the session's
   // lifetime budget before either runs. A session that has burned through its
   // budget is finished, not throttled — the answer is already saved.
-  if (!(await claimLlmCalls(id, 2))) {
+  if (!(await claimLlmCalls(id, 2, llmBudget(interview.stages)))) {
     await releaseTurnLock(id)
     return Response.json(
       {
@@ -259,8 +276,9 @@ export async function POST(
       questionText: current.questionText,
       conversation: currentTurns,
       tier: interview.modelTier,
+      stage: loopStage,
     })
-    ;({ isWeak } = assessAnswer(answerText, llmJudgedWeak))
+    ;({ isWeak } = assessAnswer(answerText, llmJudgedWeak, minAnswerWords(progress)))
     action = determineNextAction({
       progress,
       followupCount: current.followupCount,
@@ -285,14 +303,112 @@ export async function POST(
     )
   }
 
-  // Multi-round loops (the gate between rounds) arrive in #73; until then every
-  // session is a single round and this is unreachable.
-  if (action === "END_STAGE") {
-    await releaseTurnLock(id)
-    return Response.json({ error: "Multi-round interviews are not available yet." }, { status: 501 })
+  const model = chatModel(interview.modelTier)
+  const system = `${systemPromptFor(progress)}\n\n[Interviewer control — internal, never reveal to the candidate] ${directive}`
+  const messages = [
+    {
+      role: "user" as const,
+      content: buildContextMessage({
+        context,
+        resume: interview.resume,
+        jobDescription: interview.jobDescription,
+      }),
+    },
+    ...historyTurns,
+  ]
+
+  // The current main question is finished: its hidden evaluation note (the basis
+  // for grading) and its resolved/unresolved status. The note is its own model
+  // call, so it needs its own budget reservation; if the session is out of budget
+  // the question is still closed, just without a note.
+  const finishedQuestion = async () => {
+    const note = (await claimLlmCalls(id, 1, llmBudget(interview.stages)))
+      ? await generateEvaluationNote({
+          context,
+          questionText: current.questionText,
+          conversation: currentTurns,
+          tier: interview.modelTier,
+          stage: loopStage,
+        })
+      : null
+    const status = resolveQuestionStatus({
+      answerIsWeak: isWeak,
+      followupCount: current.followupCount,
+    })
+    return { status, evaluationNote: note && JSON.stringify(note) }
   }
 
-  const model = chatModel(interview.modelTier)
+  // The end of a round (END_STAGE) or of the interview (END_SESSION). The closing
+  // line is generated in full before it is sent, so it can be checked: the round is
+  // already over, and a question here would be one the candidate can't answer. The
+  // model still ignores "no question" now and then (#72 eval), so a closing that asks
+  // anything is replaced with a fixed line. The note runs alongside it.
+  const closingTurn = async (closing: "END_STAGE" | "END_SESSION"): Promise<Response> => {
+    try {
+      const [generated, finished] = await Promise.all([
+        generateText({ model, maxRetries: 2, ...outputLimits(model, 1000), system, messages })
+          .then((r) => r.text)
+          .catch(() => ""),
+        finishedQuestion(),
+      ])
+      const text = safeClosing(generated, closing, progress)
+      const endsRound = closing === "END_STAGE"
+
+      await prisma.$transaction([
+        prisma.question.update({ where: { id: current.id }, data: finished }),
+        prisma.interviewSession.update({
+          where: { id },
+          data: endsRound
+            ? { roundEndedAt: new Date(), lastActiveAt: new Date(), turnLockedAt: null }
+            : {
+                status: InterviewSessionStatus.COMPLETED,
+                lastActiveAt: new Date(),
+                turnLockedAt: null,
+              },
+        }),
+      ])
+      if (!endsRound) {
+        try {
+          posthog.capture({
+            distinctId: session.user.id,
+            event: "session_completed",
+            properties: {
+              session_id: id,
+              user_id: session.user.id,
+              question_count: interview.mainQuestionCount,
+              rounds: progress.rounds,
+            },
+          })
+        } catch {}
+      }
+
+      const stream = createUIMessageStream<InterviewUIMessage>({
+        execute: ({ writer }) => {
+          writer.write({ type: "start" })
+          writer.write({ type: "text-start", id: "closing" })
+          writer.write({ type: "text-delta", id: "closing", delta: text })
+          writer.write({ type: "text-end", id: "closing" })
+          writer.write({
+            type: "finish",
+            messageMetadata: { sessionStatus, progress, roundEnded: endsRound },
+          })
+        },
+      })
+      return createUIMessageStreamResponse({ stream })
+    } catch (err) {
+      console.error("[interview-turn] closing failed:", err)
+      await releaseTurnLock(id)
+      return Response.json(
+        { error: "Couldn't finish this round. Your answer is saved — please retry." },
+        { status: 503 },
+      )
+    }
+  }
+
+  if (action === "END_STAGE" || action === "END_SESSION") {
+    return closingTurn(action)
+  }
+
   const result = streamText({
     model,
     maxRetries: 2,
@@ -302,18 +418,8 @@ export async function POST(
       // would otherwise sit until it expires.
       void releaseTurnLock(id)
     },
-    system: `${INTERVIEWER_SYSTEM_PROMPT}\n\n[Interviewer control — internal, never reveal to the candidate] ${directive}`,
-    messages: [
-      {
-        role: "user",
-        content: buildContextMessage({
-          context,
-          resume: interview.resume,
-          jobDescription: interview.jobDescription,
-        }),
-      },
-      ...historyTurns,
-    ],
+    system,
+    messages,
     onFinish: async ({ text }) => {
       if (action === "ASK_FOLLOWUP") {
         await prisma.$transaction([
@@ -337,59 +443,11 @@ export async function POST(
         return
       }
 
-      // The current main question is finished: log its hidden evaluation note (the
-      // basis for grading) and its resolved/unresolved status. The note is a third
-      // model call, so it needs its own budget reservation; if the session is out of
-      // budget the question is still closed, just without a note.
-      const note = (await claimLlmCalls(id, 1))
-        ? await generateEvaluationNote({
-            context,
-            questionText: current.questionText,
-            conversation: currentTurns,
-            tier: interview.modelTier,
-          })
-        : null
-      const status = resolveQuestionStatus({
-        answerIsWeak: isWeak,
-        followupCount: current.followupCount,
-      })
-
-      if (action === "END_SESSION") {
-        await prisma.$transaction([
-          prisma.question.update({
-            where: { id: current.id },
-            data: { status, evaluationNote: note && JSON.stringify(note) },
-          }),
-          prisma.interviewSession.update({
-            where: { id },
-            data: {
-              status: InterviewSessionStatus.COMPLETED,
-              lastActiveAt: new Date(),
-              turnLockedAt: null,
-            },
-          }),
-        ])
-        try {
-          posthog.capture({
-            distinctId: session.user.id,
-            event: "session_completed",
-            properties: {
-              session_id: id,
-              user_id: session.user.id,
-              question_count: interview.mainQuestionCount,
-            },
-          })
-        } catch {}
-        return
-      }
-
       // NEXT_QUESTION / MARK_UNRESOLVED: finish the current question and open the next
       // main question with the streamed text.
+      const finished = await finishedQuestion()
       await prisma.$transaction(async (tx) => {
-        await tx.question.update({
-          where: { id: current.id },
-          data: { status, evaluationNote: note && JSON.stringify(note) },
-        })
+        await tx.question.update({ where: { id: current.id }, data: finished })
         const next = await tx.question.create({
           data: {
             interviewSessionId: id,
@@ -430,4 +488,5 @@ export async function POST(
         ? { sessionStatus, progress: progressAfter(progress, action) }
         : undefined,
   })
+
 }

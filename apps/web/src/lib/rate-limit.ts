@@ -35,6 +35,8 @@ export const LIMITS = {
   startInterview: { limit: 20, windowSeconds: 3_600 },
   /** Grading passes (deep thinking — the priciest single call in the app). */
   feedback: { limit: 20, windowSeconds: 3_600 },
+  /** Round verdicts between rounds of a loop (#73). */
+  stageResult: { limit: 20, windowSeconds: 3_600 },
   /** Stripe Checkout session creation. Costs nothing in AI, but not free to spam. */
   checkout: { limit: 10, windowSeconds: 3_600 },
 } as const

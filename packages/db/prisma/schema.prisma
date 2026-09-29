@@ -148,6 +148,7 @@ enum Stage {
   SCREENING
   HIRING_MANAGER
   ASSESSMENT
+  FINAL // a senior leader: the role, never a real named person (#73)
 }
 
 // The soft gate after a round in a multi-round loop (#46). INCOMPLETE is set in

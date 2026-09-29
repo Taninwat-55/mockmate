@@ -1,11 +1,16 @@
 import { generateObject } from "ai"
-import type { ModelTier, OverallSignal } from "@mockmate/db"
+import type { ModelTier, OverallSignal, Stage } from "@mockmate/db"
 
 import { gradingModel, outputLimits } from "@/lib/ai"
 import { buildCandidateProfile } from "@/lib/interview-context"
-import { MAX_MAIN_QUESTIONS, MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+import {
+  MAX_MAIN_QUESTIONS,
+  MIN_QUESTIONS_FOR_VERDICT,
+  plannedQuestions,
+  questionsInRound,
+} from "@/lib/interview-engine"
 import { feedbackSchema, type GradingFeedback } from "@/types/feedback"
-import type { EvaluationNote, InterviewContext } from "@/types/interview"
+import { STAGE_LABELS, type EvaluationNote, type InterviewContext } from "@/types/interview"
 
 // Focused prompt for the end-of-session grading pass. The model receives only the
 // private evaluation notes — not the full conversation — so it grades from the
@@ -50,12 +55,15 @@ export type FeedbackResult = Omit<GradingFeedback, "overallSignal"> & {
 // (Strong Hire after 2 AI-written answers), so the rules that matter most are code:
 // - fewer than MIN_QUESTIONS_FOR_VERDICT answered questions → no verdict at all
 // - STRONG_HIRE needs every score 4+, nothing unresolved and at most one partial
+// - in a loop (#73), a STOP at any round's gate caps it at HIRE
 export function finalSignal(
   grade: GradingFeedback,
   notes: EvaluationNote[],
+  anyStop = false,
 ): OverallSignal {
   if (notes.length < MIN_QUESTIONS_FOR_VERDICT) return "INCOMPLETE"
   if (grade.overallSignal !== "STRONG_HIRE") return grade.overallSignal
+  if (anyStop) return "HIRE"
   const minScore = Math.min(
     grade.roleKnowledgeScore,
     grade.communicationClarityScore,
@@ -66,21 +74,47 @@ export function finalSignal(
   return minScore >= 4 && !unresolved && partial <= 1 ? "STRONG_HIRE" : "HIRE"
 }
 
+// A multi-round loop's shape for grading (#73): the plan, which round each note
+// belongs to, and whether any round's gate said STOP. Omitted for a single round.
+export type LoopGrading = {
+  stages: Stage[]
+  noteStages: Stage[] // parallel to `notes`
+  anyStop: boolean
+}
+
+const formatNote = (note: EvaluationNote, i: number) =>
+  `Question ${i + 1}: ${note.resolution}\nSummary: ${note.summary}\nRole knowledge signal: ${note.roleSignal}\nCommunication signal: ${note.communicationSignal}\nProblem-solving signal: ${note.problemSolvingSignal}`
+
+// Notes grouped under round headings, plus how much of each round was answered.
+function loopNotesAndCoverage(notes: EvaluationNote[], loop: LoopGrading) {
+  const rounds = loop.stages.map((stage) => {
+    const roundNotes = notes.filter((_, i) => loop.noteStages[i] === stage)
+    return { stage, roundNotes, planned: questionsInRound(loop.stages, stage) }
+  })
+  const notesText = rounds
+    .filter((r) => r.roundNotes.length > 0)
+    .map((r) => `## Round: ${STAGE_LABELS[r.stage]}\n\n${r.roundNotes.map(formatNote).join("\n\n")}`)
+    .join("\n\n")
+  const perRound = rounds.map((r) => `${STAGE_LABELS[r.stage]} ${r.roundNotes.length}/${r.planned}`).join(", ")
+  const total = plannedQuestions(loop.stages)
+  const coverage =
+    notes.length < total
+      ? `This was a ${loop.stages.length}-round interview loop. The notes cover ${notes.length} of ${total} main questions (${perRound}): the candidate ended the loop early. Grade only what the notes show, and say in the summary that it is based on ${notes.length} of ${total} questions.`
+      : `This was a ${loop.stages.length}-round interview loop. The notes cover all ${total} main questions (${perRound}).`
+  return { notesText, coverage }
+}
+
 export async function generateFeedback(
   notes: EvaluationNote[],
   context: InterviewContext,
   tier: ModelTier,
+  loop?: LoopGrading,
 ): Promise<FeedbackResult> {
-  const notesText = notes
-    .map(
-      (note, i) =>
-        `Question ${i + 1}: ${note.resolution}\nSummary: ${note.summary}\nRole knowledge signal: ${note.roleSignal}\nCommunication signal: ${note.communicationSignal}\nProblem-solving signal: ${note.problemSolvingSignal}`,
-    )
-    .join("\n\n")
-  const coverage =
-    notes.length < MAX_MAIN_QUESTIONS
-      ? `These notes cover ${notes.length} of ${MAX_MAIN_QUESTIONS} main questions: the candidate ended the interview early. Grade only what the notes show, and say in the summary that it is based on ${notes.length} of ${MAX_MAIN_QUESTIONS} questions.`
-      : `These notes cover all ${MAX_MAIN_QUESTIONS} main questions.`
+  const single = {
+    notesText: notes.map(formatNote).join("\n\n"),
+    coverage: singleRoundCoverage(notes),
+  }
+  const { notesText, coverage } = loop ? loopNotesAndCoverage(notes, loop) : single
 
   const model = gradingModel(tier)
   const { object } = await generateObject({
@@ -97,5 +131,11 @@ export async function generateFeedback(
     ],
   })
 
-  return { ...object, overallSignal: finalSignal(object, notes) }
+  return { ...object, overallSignal: finalSignal(object, notes, loop?.anyStop) }
+}
+
+function singleRoundCoverage(notes: EvaluationNote[]): string {
+  return notes.length < MAX_MAIN_QUESTIONS
+    ? `These notes cover ${notes.length} of ${MAX_MAIN_QUESTIONS} main questions: the candidate ended the interview early. Grade only what the notes show, and say in the summary that it is based on ${notes.length} of ${MAX_MAIN_QUESTIONS} questions.`
+    : `These notes cover all ${MAX_MAIN_QUESTIONS} main questions.`
 }

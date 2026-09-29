@@ -9,6 +9,8 @@ import type { StageProgress } from "@/lib/interview-engine"
 export type InterviewMessageMetadata = {
   sessionStatus?: "IN_PROGRESS" | "COMPLETED"
   progress?: StageProgress
+  // True when this reply closed a round of a multi-round loop (#73): show the gate.
+  roundEnded?: boolean
 }
 
 // The app's UIMessage shape — a plain text-part message carrying the metadata above.

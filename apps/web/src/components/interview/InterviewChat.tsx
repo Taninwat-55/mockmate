@@ -9,7 +9,11 @@ import { toast } from "sonner"
 import { startInterview, endInterviewEarly } from "@/actions/interview"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import type { Stage } from "@mockmate/db"
+
+import { RoundGate } from "@/components/interview/RoundGate"
 import type { StageProgress } from "@/lib/interview-engine"
+import { STAGE_LABELS } from "@/types/interview"
 import type { InterviewUIMessage } from "@/types/interview-chat"
 
 const MAX_ANSWER_CHARS = 2000
@@ -38,13 +42,22 @@ export function InterviewChat({
   sessionId,
   initialMessages,
   initialProgress,
+  stages,
+  initialRoundEnded,
 }: {
   sessionId: string
   initialMessages: InterviewUIMessage[]
   initialProgress: StageProgress
+  stages: Stage[]
+  // True when the page loads between rounds of a loop (#73): show the gate.
+  initialRoundEnded: boolean
 }) {
   const router = useRouter()
   const [progress, setProgress] = useState(initialProgress)
+  const [betweenRounds, setBetweenRounds] = useState(initialRoundEnded)
+  // The interview just ended: stay on the closing line until the candidate opens
+  // their results, instead of jumping away before they can read it.
+  const [completed, setCompleted] = useState(false)
   const [input, setInput] = useState("")
   const [timedOut, setTimedOut] = useState(false)
   const [opening, setOpening] = useState(initialMessages.length === 0)
@@ -63,9 +76,10 @@ export function InterviewChat({
       }),
       onFinish: ({ message }) => {
         if (message.metadata?.progress) setProgress(message.metadata.progress)
-        // The last answer flips the session to COMPLETED server-side; refresh so the
-        // page swaps to the completed state.
-        if (message.metadata?.sessionStatus === "COMPLETED") router.refresh()
+        if (message.metadata?.roundEnded) setBetweenRounds(true)
+        // The last answer flips the session to COMPLETED server-side. Keep the chat
+        // on the closing line; "See your results" then refreshes into the report.
+        if (message.metadata?.sessionStatus === "COMPLETED") setCompleted(true)
       },
       onError: () => {
         toast.error(
@@ -190,44 +204,65 @@ export function InterviewChat({
         )}
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-2 border-t border-border px-4 py-4"
-      >
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)
-            }
-          }}
-          placeholder="Type your answer… (Enter to send, Shift+Enter for a new line)"
-          maxLength={MAX_ANSWER_CHARS}
-          disabled={busy || opening}
-          className="min-h-24"
-        />
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {formatCount(input.length)} / {formatCount(MAX_ANSWER_CHARS)}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleEndEarly}
-              disabled={opening}
-            >
-              End Interview Early
-            </Button>
-            <Button type="submit" size="sm" disabled={busy || opening || !input.trim()}>
-              {busy ? "Sending…" : "Send"}
-            </Button>
-          </div>
+      {completed ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-4">
+          <p className="text-sm text-muted-foreground">The interview is over.</p>
+          <Button onClick={() => router.refresh()}>See your results →</Button>
         </div>
-      </form>
+      ) : betweenRounds && stages[progress.round] ? (
+        <RoundGate
+          sessionId={sessionId}
+          endedRound={STAGE_LABELS[progress.stage].toLowerCase()}
+          nextRound={STAGE_LABELS[stages[progress.round]].toLowerCase()}
+          onContinued={(question, next) => {
+            setMessages((prev) => [
+              ...prev,
+              { id: question.id, role: "assistant", parts: [{ type: "text", text: question.text }] },
+            ])
+            setProgress(next)
+            setBetweenRounds(false)
+          }}
+        />
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-2 border-t border-border px-4 py-4"
+        >
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)
+              }
+            }}
+            placeholder="Type your answer… (Enter to send, Shift+Enter for a new line)"
+            maxLength={MAX_ANSWER_CHARS}
+            disabled={busy || opening}
+            className="min-h-24"
+          />
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {formatCount(input.length)} / {formatCount(MAX_ANSWER_CHARS)}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleEndEarly}
+                disabled={opening}
+              >
+                End Interview Early
+              </Button>
+              <Button type="submit" size="sm" disabled={busy || opening || !input.trim()}>
+                {busy ? "Sending…" : "Send"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      )}
     </div>
   )
 }
