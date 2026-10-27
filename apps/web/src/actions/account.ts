@@ -88,7 +88,7 @@ export async function updateSavedResume(
     return { success: false, error: "Couldn't save your CV. Please try again." }
   }
 
-  revalidatePath("/dashboard")
+  revalidatePath("/interview/new")
   return { success: true }
 }
 

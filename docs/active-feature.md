@@ -8,15 +8,23 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#78 Atelier hygiene pass** (`fix/atelier-hygiene`), step 1 of the Atelier plan
-  - Scope: font fix (#77) merged back into `develop`; em dashes out of user-facing copy;
-    /login with logo, way back and context; `AppHeader` on dashboard, settings and
-    feedback (logo in the live interview bar); history rows show verdict and scores;
-    saved CV collapsed to one line.
+- **Release v0.4.0** (`develop` → `main`), step 5 of the Atelier plan: smoke test on
+  mockmate.space at 390 and desktop, tag, portfolio "shipped" snapshot.
 
 ---
 
 ## History
+
+- 2026-10-27  Atelier step 4 and proof pass: landing sample plays the verdict moment on
+  scroll (#85, PR #86); dashboard to Direction A with the setup form on /interview/new
+  (#87, PR #88); interview room to Direction B with the pinned prompt (#89, PR #90);
+  generating state matches the report (#91, PR #92); dashboard title row wraps (#93).  ✓
+
+- 2026-10-27  Identity + verdict moment (#82, PR #84): paper/ink/pen tokens, the ◆ mark,
+  feedback page to Direction A, the verdict moment (once per session via cookie).  ✓
+
+- 2026-10-27  Dashboard polish (#80, PR #81) and Atelier hygiene pass (#78, PR #79): font
+  fix in develop, em dashes out of the copy, /login, app header, history verdicts.  ✓
 
 - 2026-10-27  Multi-round loop, owner-only (#73, PR #76): rounds, soft gates, loop
   grading and cron rules.  ✓

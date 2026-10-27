@@ -14,15 +14,15 @@ type StageResult = { verdict: StageVerdict; summary: string }
 const VERDICT_CONFIG: Record<StageVerdict, { title: (next: string) => string; className: string }> = {
   ADVANCE: {
     title: (next) => `You'd move on to the ${next} round`,
-    className: "border-green-200 bg-green-50 dark:border-green-900/40 dark:bg-green-900/20",
+    className: "border-foreground bg-card",
   },
   STOP: {
     title: () => "A real company would likely stop here",
-    className: "border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-900/20",
+    className: "border-dashed border-foreground/60 bg-card",
   },
   INCOMPLETE: {
     title: () => "Not enough to judge this round",
-    className: "border-border bg-muted/40",
+    className: "border-border bg-card",
   },
 }
 
@@ -104,8 +104,8 @@ export function RoundGate({
   const config = result ? VERDICT_CONFIG[result.verdict] : null
 
   return (
-    <div className="space-y-4 border-t border-border px-4 py-5">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5 sm:px-6">
+      <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
         The {endedRound} round is done
       </p>
 

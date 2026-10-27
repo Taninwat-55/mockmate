@@ -21,7 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <AppHeader user={session.user} />
+      <AppHeader user={session.user} width="4xl" />
       {children}
     </>
   )
