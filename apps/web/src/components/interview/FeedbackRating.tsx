@@ -32,13 +32,15 @@ export function FeedbackRating({
   }
 
   return (
-    <div className="rounded-lg border border-border p-5 space-y-3">
-      <p className="text-sm font-medium">How useful was this feedback?</p>
-      <div className="flex gap-2">
+    <div className="space-y-3 text-center">
+      <p className="text-sm text-muted-foreground">How useful was this feedback?</p>
+      <div className="flex justify-center gap-2">
         {[1, 2, 3, 4, 5].map((value) => (
           <button
             key={value}
             disabled={saving}
+            aria-label={`Rate ${value} out of 5`}
+            aria-pressed={rating === value}
             onClick={() => void handleRate(value)}
             className={`h-9 w-9 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
               rating === value
