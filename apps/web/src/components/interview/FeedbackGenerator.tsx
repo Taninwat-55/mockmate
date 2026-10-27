@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { DiamondOutline } from "@/components/brand/Logo"
+import { Button, buttonVariants } from "@/components/ui/button"
 
 export function FeedbackGenerator({ sessionId }: { sessionId: string }) {
   const router = useRouter()
@@ -37,26 +39,34 @@ export function FeedbackGenerator({ sessionId }: { sessionId: string }) {
 
   if (isError) {
     return (
-      <div className="space-y-4 rounded-lg border border-border p-6 text-center">
+      <div className="mt-14 space-y-5 text-center">
         <p className="text-sm text-muted-foreground">
-          Something went wrong generating your feedback.
+          Something went wrong writing your report. Your interview is saved.
         </p>
-        <Button
-          onClick={() => {
-            setIsError(false)
-            setAttempt((a) => a + 1)
-          }}
-        >
-          Retry
-        </Button>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
+            Back to dashboard
+          </Link>
+          <Button
+            onClick={() => {
+              setIsError(false)
+              setAttempt((a) => a + 1)
+            }}
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center justify-center gap-3 py-16 text-muted-foreground">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      <span className="text-sm">Generating your feedback…</span>
+    <div className="mt-14 flex flex-col items-center gap-4 text-muted-foreground" aria-live="polite">
+      {/* The stamp's diamond, breathing while the panel writes (still under reduced motion). */}
+      <DiamondOutline className="size-8 text-foreground/40 motion-safe:animate-pulse" />
+      <p className="font-mono text-xs uppercase tracking-[0.14em]">
+        The panel is writing your report
+      </p>
     </div>
   )
 }
