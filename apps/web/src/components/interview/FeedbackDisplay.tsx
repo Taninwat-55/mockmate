@@ -1,10 +1,10 @@
 import type { Feedback } from "@mockmate/db"
 
-import { DiamondOutline } from "@/components/brand/Logo"
 import { MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
 import { SIGNAL_LABELS } from "@/types/interview"
 
 import { FeedbackRating } from "./FeedbackRating"
+import { LABEL, Note, ROW_VARS, ScoreBar, VerdictStamp } from "./VerdictParts"
 import { VerdictSeen } from "./VerdictSeen"
 
 // How each verdict presents (#82). The stamp is told apart by fill and wording,
@@ -34,56 +34,6 @@ const SIGNAL_CONFIG = {
   Feedback["overallSignal"],
   { eyebrow: string; line: string; stamp: "solid" | "outline" | null }
 >
-
-// Literal classes so Tailwind sees them; the CSS turns them into delays.
-const ROW_VARS = ["[--row:0]", "[--row:1]", "[--row:2]"] as const
-const SEGMENT_VARS = ["[--seg:0]", "[--seg:1]", "[--seg:2]", "[--seg:3]", "[--seg:4]"] as const
-
-const LABEL = "font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint"
-
-function ScoreBar({ score }: { score: number }) {
-  return (
-    <div className="mt-3 flex gap-1.5" aria-hidden="true">
-      {SEGMENT_VARS.map((segVar, i) => (
-        <span key={segVar} className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-          {i < score && (
-            <span className={`v-segment absolute inset-0 rounded-full bg-foreground ${segVar}`} />
-          )}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function Note({
-  kind,
-  text,
-}: {
-  kind: "strength" | "weakness" | "tip"
-  text: string
-}) {
-  const marker = {
-    strength: { label: "Strength", glyph: "+", className: "bg-foreground text-background" },
-    weakness: { label: "Weakness", glyph: "−", className: "border border-dashed border-foreground/40 text-muted-foreground" },
-    // The one place the panel "writes": the pen accent (#82).
-    tip: { label: "Next time", glyph: "→", className: "bg-pen text-background" },
-  }[kind]
-
-  return (
-    <div className={`flex gap-3 ${kind === "tip" ? "v-tip" : ""}`}>
-      <span
-        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-[5px] text-xs font-semibold ${marker.className}`}
-        aria-hidden="true"
-      >
-        {marker.glyph}
-      </span>
-      <div>
-        <p className={`${LABEL} ${kind === "tip" ? "text-pen" : ""}`}>{marker.label}</p>
-        <p className="mt-0.5 text-sm leading-relaxed">{text}</p>
-      </div>
-    </div>
-  )
-}
 
 function DimensionRow({
   index,
@@ -181,18 +131,7 @@ export function FeedbackDisplay({
 
         <p className={`mt-10 ${LABEL}`}>{signal.eyebrow}</p>
         {signal.stamp ? (
-          <div
-            className={`v-stamp mt-3 inline-flex items-center gap-3 rounded-2xl px-7 py-4 sm:gap-4 sm:px-9 sm:py-5 ${
-              signal.stamp === "solid"
-                ? "bg-foreground text-background"
-                : "border-[2.5px] border-foreground text-foreground"
-            }`}
-          >
-            <DiamondOutline className="size-6 sm:size-8" />
-            <span className="text-[34px] font-bold uppercase leading-none tracking-[-0.03em] sm:text-[48px]">
-              {SIGNAL_LABELS[signalKey]}
-            </span>
-          </div>
+          <VerdictStamp label={SIGNAL_LABELS[signalKey]} variant={signal.stamp} />
         ) : (
           <p className="v-stamp mt-3 text-3xl font-semibold tracking-tight">
             {SIGNAL_LABELS[signalKey]}
