@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 
@@ -5,6 +6,7 @@ import { prisma, InterviewSessionStatus } from "@mockmate/db"
 import { auth } from "@/auth"
 import { interviewTitle } from "@/lib/interview-context"
 import { plannedQuestions } from "@/lib/interview-engine"
+import { VERDICT_SEEN_COOKIE, parseSeen } from "@/lib/verdict-seen"
 import { buttonVariants } from "@/components/ui/button"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { FeedbackDisplay } from "@/components/interview/FeedbackDisplay"
@@ -31,34 +33,40 @@ export default async function FeedbackPage({
     redirect(`/interview/${id}`)
   }
 
-  const [feedback, answeredQuestions] = await Promise.all([
+  const [feedback, answeredQuestions, cookieStore] = await Promise.all([
     prisma.feedback.findUnique({ where: { interviewSessionId: id } }),
     prisma.question.count({
       where: { interviewSessionId: id, evaluationNote: { not: null } },
     }),
+    cookies(),
   ])
+  // The verdict moment plays on the first view in this browser only (#82).
+  const play = !parseSeen(cookieStore.get(VERDICT_SEEN_COOKIE)?.value).includes(id)
 
   return (
     <>
       <AppHeader user={session.user} width="3xl" />
-      <main className="mx-auto w-full max-w-3xl px-6 py-10">
-        <div className="mb-8 space-y-1">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Feedback</p>
-          <h1 className="text-2xl font-semibold tracking-tight">{interviewTitle(interview)}</h1>
-        </div>
-
+      <main className="mx-auto w-full max-w-3xl px-6 py-12">
         {feedback ? (
           <FeedbackDisplay
             feedback={feedback}
             sessionId={id}
+            title={interviewTitle(interview)}
             answeredQuestions={answeredQuestions}
             plannedQuestions={plannedQuestions(interview.stages)}
+            play={play}
           />
         ) : (
-          <FeedbackGenerator sessionId={id} />
+          <>
+            <div className="mb-8 space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Feedback</p>
+              <h1 className="text-2xl font-semibold tracking-tight">{interviewTitle(interview)}</h1>
+            </div>
+            <FeedbackGenerator sessionId={id} />
+          </>
         )}
 
-        <div className="mt-10 flex flex-wrap gap-3">
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
             Back to dashboard
           </Link>
