@@ -8,12 +8,16 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **Release v0.4.0** (`develop` → `main`), step 5 of the Atelier plan: smoke test on
-  mockmate.space at 390 and desktop, tag, portfolio "shipped" snapshot.
+- Nothing in progress. The Atelier plan (steps 1 to 5) shipped in v0.4.0 and v0.4.1.
 
 ---
 
 ## History
+
+- 2026-10-27  Released v0.4.0 (#95) and v0.4.1 (#100, phone fixes: cards fit at 390,
+  counts on one line, #98). On release, production was missing #83's three migrations
+  (add_company, add_interview_stages, add_final_stage); applied after a Neon backup
+  branch. main and develop reconciled with `merge -s ours` (#97, #99).  ✓
 
 - 2026-10-27  Atelier step 4 and proof pass: landing sample plays the verdict moment on
   scroll (#85, PR #86); dashboard to Direction A with the setup form on /interview/new
