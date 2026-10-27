@@ -4,7 +4,7 @@ import { SITE_NAME, SITE_TAGLINE } from "@/lib/site"
 
 // Code-generated social share image — no external logo asset dependency. Drawn
 // in the brand's monochrome palette to match the site.
-export const alt = "MockMate — AI mock interviews with graded feedback"
+export const alt = "MockMate, AI mock interviews with graded feedback"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 

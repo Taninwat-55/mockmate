@@ -78,7 +78,7 @@ export default async function SettingsPage() {
           <CardContent className="space-y-5">
             {user.isOwner ? (
               <div>
-                <p className="text-sm font-medium">Owner — unlimited interviews</p>
+                <p className="text-sm font-medium">Owner, unlimited interviews</p>
                 <p className="text-sm text-muted-foreground">
                   Pick Free, Pro or Max models for each interview. You&apos;re
                   never charged a credit or the weekly free session.

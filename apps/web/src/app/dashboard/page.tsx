@@ -3,7 +3,6 @@ import { auth } from "@/auth"
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
 import { ResumeBanner } from "@/components/dashboard/ResumeBanner"
 import { SessionHistory } from "@/components/dashboard/SessionHistory"
-import { UserMenu } from "@/components/dashboard/UserMenu"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -31,21 +30,14 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
-      <header className="flex w-full max-w-2xl items-center justify-between gap-4">
-        <div className="text-left">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Welcome{user?.name ? `, ${user.name}` : ""}.
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Paste a resume and a job description to start a mock interview.
-          </p>
-        </div>
-        <UserMenu
-          name={user?.name ?? null}
-          email={user?.email ?? null}
-          image={user?.image ?? null}
-        />
-      </header>
+      <div className="w-full max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Welcome{user?.name ? `, ${user.name}` : ""}.
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Paste a resume and a job description to start a mock interview.
+        </p>
+      </div>
 
       {user?.id && (
         <div className="mt-10 w-full max-w-2xl">

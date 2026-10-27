@@ -65,7 +65,7 @@ export default async function Home() {
               <p className="mt-7 max-w-[46ch] text-[17px] leading-relaxed text-muted-foreground">
                 You know the material. You just blank when someone&apos;s watching.
                 MockMate runs a realistic interview for the exact job you&apos;re
-                chasing, from barista to nurse to developer — then grades you like a
+                chasing, from barista to nurse to developer, then grades you like a
                 hiring manager would.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
@@ -151,13 +151,13 @@ export default async function Home() {
               <p className="mt-6 text-[17px] leading-relaxed text-muted-foreground">
                 MockMate is an AI-powered mock-interview tool that runs a realistic,
                 multi-turn interview for any role, tailored to your level and, if you have
-                them, the job posting and your résumé. MockMate asks five questions — with up
-                to two follow-ups each — and challenges vague answers the way a real
-                interviewer does.
+                them, the job posting and your résumé. MockMate asks five questions,
+                with up to two follow-ups each, and challenges vague answers the way a
+                real interviewer does.
               </p>
               <p className="mt-5 text-[17px] leading-relaxed text-muted-foreground">
-                When the session ends, you get a graded report across three dimensions —
-                Role Knowledge, Communication Clarity, and Problem-solving Approach — and a
+                When the session ends, you get a graded report across three dimensions
+                (Role Knowledge, Communication Clarity and Problem-solving Approach) and a
                 clear Strong&nbsp;Hire / Hire / No&nbsp;Hire signal. It runs entirely in your
                 browser, is text-first, and is built for anyone preparing for an interview,
                 especially their first one.
@@ -462,7 +462,7 @@ const steps = [
   {
     n: 2,
     title: "Sit the interview",
-    body: "A live AI interviewer asks five questions for that role — and digs in with up to two follow-ups each, exactly like a real panel.",
+    body: "A live AI interviewer asks five questions for that role and digs in with up to two follow-ups each, exactly like a real panel.",
   },
   {
     n: 3,
@@ -474,7 +474,7 @@ const steps = [
 const faqs = [
   {
     q: "How long does an interview take?",
-    a: "About fifteen minutes. Five questions, with up to two follow-ups each — enough to feel like the real thing without eating your evening.",
+    a: "About fifteen minutes. Five questions, with up to two follow-ups each. Enough to feel like the real thing without eating your evening.",
   },
   {
     q: "What kind of questions will I get?",
@@ -490,7 +490,7 @@ const faqs = [
   },
   {
     q: "Can I retake an interview?",
-    a: "Yes — run as many as your plan allows. Most people do a few rounds against the same role and watch their scores climb.",
+    a: "Yes. Run as many as your plan allows. Most people do a few rounds against the same role and watch their scores climb.",
   },
   {
     q: "Does it work for non-technical roles?",

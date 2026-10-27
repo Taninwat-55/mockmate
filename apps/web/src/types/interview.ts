@@ -2,7 +2,14 @@ import { z } from "zod"
 
 // Type-only: the label maps below are used by the (client) setup form, which must
 // not pull the Prisma client into the browser bundle.
-import type { EmploymentType, ModelTier, Seniority, Stage, WorkSetting } from "@mockmate/db"
+import type {
+  EmploymentType,
+  ModelTier,
+  OverallSignal,
+  Seniority,
+  Stage,
+  WorkSetting,
+} from "@mockmate/db"
 
 // ============================================================
 // Interview context (#44) — role, level, work setting, employment type
@@ -34,6 +41,14 @@ export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
   FREE: "Free",
   PAID: "Pro",
   MAX: "Max",
+}
+
+// Verdict names, shared by the feedback page and the dashboard history (#78).
+export const SIGNAL_LABELS: Record<OverallSignal, string> = {
+  STRONG_HIRE: "Strong Hire",
+  HIRE: "Hire",
+  NO_HIRE: "No Hire",
+  INCOMPLETE: "Not enough to judge",
 }
 
 // Round names (#73), shown in the progress line and gate, and used in the prompts.

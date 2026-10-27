@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 import { auth } from "@/auth"
+import { AppHeader } from "@/components/layout/AppHeader"
 
 // Auth-gated area — never index it.
 export const metadata: Metadata = {
@@ -19,5 +20,10 @@ export default async function SettingsLayout({
   const session = await auth()
   if (!session) redirect("/login")
 
-  return <>{children}</>
+  return (
+    <>
+      <AppHeader user={session.user} />
+      {children}
+    </>
+  )
 }

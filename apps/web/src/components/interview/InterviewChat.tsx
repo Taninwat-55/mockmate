@@ -83,7 +83,7 @@ export function InterviewChat({
       },
       onError: () => {
         toast.error(
-          "We're experiencing high traffic. Your progress is saved — click Retry to continue.",
+          "We're experiencing high traffic. Your progress is saved. Click Retry to continue.",
         )
       },
     })

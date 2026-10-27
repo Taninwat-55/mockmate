@@ -32,7 +32,7 @@ export default function BuyPage() {
             Buy credits
           </h1>
           <p className="text-sm text-muted-foreground">
-            One credit = one Pro interview. No subscription — you only pay for
+            One credit = one Pro interview. No subscription. You only pay for
             what you use.
           </p>
         </div>
@@ -57,7 +57,7 @@ export default function BuyPage() {
                   </li>
                 ))}
               </ul>
-              <BuyButton pack="single">Buy 1 session — 19 DKK</BuyButton>
+              <BuyButton pack="single">Buy 1 session · 19 DKK</BuyButton>
             </CardContent>
           </Card>
 
@@ -84,14 +84,14 @@ export default function BuyPage() {
                   </li>
                 ))}
               </ul>
-              <BuyButton pack="five">Buy 5 sessions — 79 DKK</BuyButton>
+              <BuyButton pack="five">Buy 5 sessions · 79 DKK</BuyButton>
             </CardContent>
           </Card>
         </div>
 
         <p className="text-xs text-muted-foreground">
           Secure payment via Stripe. Free users get 1 full interview every 7
-          days — credits add deeper grading, the emailed report and full history.
+          days. Credits add deeper grading, the emailed report and full history.
         </p>
       </div>
     </main>

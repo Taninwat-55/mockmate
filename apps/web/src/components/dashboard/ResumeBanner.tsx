@@ -44,7 +44,7 @@ export async function ResumeBanner({ userId }: ResumeBannerProps) {
         <div className="min-w-0">
           <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
             {nextStage
-              ? `Round ${progress.round} of ${progress.rounds} done — the ${STAGE_LABELS[nextStage].toLowerCase()} round is next`
+              ? `Round ${progress.round} of ${progress.rounds} done. The ${STAGE_LABELS[nextStage].toLowerCase()} round is next`
               : "You have an unfinished interview"}
           </p>
           <p className="mt-0.5 truncate text-xs text-amber-700 dark:text-amber-400">

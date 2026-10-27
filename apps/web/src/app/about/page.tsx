@@ -55,7 +55,7 @@ export default function AboutPage() {
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
                 <span className="font-medium text-foreground">Pick your role and level.</span>{" "}
                 Type the role you&apos;re interviewing for and pick your level. If you have them,
-                add the job posting and your résumé as plain text — they make the questions
+                add the job posting and your résumé as plain text. They make the questions
                 sharper.
               </p>
             </li>
@@ -65,7 +65,7 @@ export default function AboutPage() {
               </span>
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
                 <span className="font-medium text-foreground">Sit the interview.</span>{" "}
-                An AI interviewer asks five questions for that role and level — and
+                An AI interviewer asks five questions for that role and level, and
                 digs in with up to two follow-ups each, challenging vague or incomplete
                 answers exactly like a real panel.
               </p>
@@ -77,7 +77,7 @@ export default function AboutPage() {
               <p className="text-[16.5px] leading-relaxed text-muted-foreground">
                 <span className="font-medium text-foreground">Read the verdict.</span>{" "}
                 At the end you get a graded scorecard across Role Knowledge,
-                Communication Clarity, and Problem-solving Approach — each scored 1–5 — plus a
+                Communication Clarity and Problem-solving Approach, each scored 1–5, plus a
                 clear Strong&nbsp;Hire / Hire / No&nbsp;Hire signal and a short summary.
               </p>
             </li>
@@ -88,7 +88,7 @@ export default function AboutPage() {
         <section className="mt-16">
           <h2 className="text-[26px] font-semibold tracking-[-0.02em]">Who it&apos;s for</h2>
           <p className="mt-6 text-[16.5px] leading-relaxed text-muted-foreground">
-            MockMate is built for anyone preparing for an interview, in any field — and
+            MockMate is built for anyone preparing for an interview, in any field, and
             especially for students, first-time job seekers and juniors heading into their
             first real interviews. Because it&apos;s text-first, it also lowers the barrier for
             non-native English speakers, who can read and compose answers carefully while still
@@ -102,7 +102,7 @@ export default function AboutPage() {
           <p className="mt-6 text-[16.5px] leading-relaxed text-muted-foreground">
             MockMate is pay-per-session, with no subscription. There&apos;s a free session
             every week, a single session for 19&nbsp;DKK, or a 5-session pack for 79&nbsp;DKK.
-            It runs entirely in your browser — there&apos;s nothing to install.
+            It runs entirely in your browser, so there&apos;s nothing to install.
           </p>
         </section>
 

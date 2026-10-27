@@ -264,7 +264,7 @@ export async function POST(
     return Response.json(
       {
         error:
-          "This interview has reached its limit. Your answer is saved — please start a new session.",
+          "This interview has reached its limit. Your answer is saved. Please start a new session.",
       },
       { status: 429 },
     )
@@ -297,7 +297,7 @@ export async function POST(
     return Response.json(
       {
         error:
-          "Service temporarily unavailable. Your answer is saved — please retry.",
+          "Service temporarily unavailable. Your answer is saved. Please retry.",
       },
       { status: 503 },
     )
@@ -399,7 +399,7 @@ export async function POST(
       console.error("[interview-turn] closing failed:", err)
       await releaseTurnLock(id)
       return Response.json(
-        { error: "Couldn't finish this round. Your answer is saved — please retry." },
+        { error: "Couldn't finish this round. Your answer is saved. Please retry." },
         { status: 503 },
       )
     }
