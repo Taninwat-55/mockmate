@@ -4,6 +4,12 @@ import { prisma, InterviewSessionStatus } from "@mockmate/db"
 // Invoked daily at midnight UTC by Vercel Cron. Finds all IN_PROGRESS sessions
 // with lastActiveAt older than 24h and marks them ABANDONED.
 //
+// Multi-round loops (#73): a loop waiting between rounds (`roundEndedAt` set) may
+// pause for 7 days, not 24h. A loop that stops for good after at least one finished
+// round is closed as COMPLETED instead: the candidate gets a report on the rounds
+// they did (graded when they next open it) and the credit stays spent. Only a
+// session with no finished round is abandoned and refunded.
+//
 // Paid sessions (#16 §3a): a paid session the system pulled the plug on must not
 // cost the user money, so each one is refunded 1 credit in the SAME transaction
 // as its status flip. Because the flip only targets rows still IN_PROGRESS, that
@@ -21,11 +27,38 @@ export async function GET(req: Request) {
   }
 
   const threshold = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const betweenRoundsThreshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
+  // Loops paused between rounds for 7 days: a round is done, so close with a report.
+  const { count: loopsClosedBetweenRounds } = await prisma.interviewSession.updateMany({
+    where: {
+      status: InterviewSessionStatus.IN_PROGRESS,
+      roundEndedAt: { lt: betweenRoundsThreshold },
+    },
+    data: { status: InterviewSessionStatus.COMPLETED },
+  })
+
+  // Loops idle mid-round after finishing at least one round: close with a report too.
+  const staleLoops = await prisma.interviewSession.findMany({
+    where: {
+      status: InterviewSessionStatus.IN_PROGRESS,
+      roundEndedAt: null,
+      lastActiveAt: { lt: threshold },
+      stageResults: { some: {} },
+    },
+    select: { id: true },
+  })
+  const { count: loopsClosedMidRound } = await prisma.interviewSession.updateMany({
+    where: { id: { in: staleLoops.map((s) => s.id) }, status: InterviewSessionStatus.IN_PROGRESS },
+    data: { status: InterviewSessionStatus.COMPLETED },
+  })
+
+  // Everything else idle for 24h mid-round had no finished round: abandon it.
   // Paid sessions: refund 1 credit each, atomically with the status flip.
   const paidStale = await prisma.interviewSession.findMany({
     where: {
       status: InterviewSessionStatus.IN_PROGRESS,
+      roundEndedAt: null,
       lastActiveAt: { lt: threshold },
       isPaid: true,
     },
@@ -53,6 +86,7 @@ export async function GET(req: Request) {
   const { count: freeAbandoned } = await prisma.interviewSession.updateMany({
     where: {
       status: InterviewSessionStatus.IN_PROGRESS,
+      roundEndedAt: null,
       lastActiveAt: { lt: threshold },
       isPaid: false,
     },
@@ -69,6 +103,7 @@ export async function GET(req: Request) {
   return Response.json({
     abandoned: freeAbandoned + refunded,
     refunded,
+    loopsCompleted: loopsClosedBetweenRounds + loopsClosedMidRound,
     limitsSwept,
   })
 }

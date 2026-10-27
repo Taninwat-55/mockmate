@@ -1,24 +1,25 @@
 import type { Feedback } from "@mockmate/db"
 
-import { MAX_MAIN_QUESTIONS, MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+import { MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+import { SIGNAL_LABELS } from "@/types/interview"
 
 import { FeedbackRating } from "./FeedbackRating"
 
 const SIGNAL_CONFIG = {
   STRONG_HIRE: {
-    label: "Strong Hire",
+    label: SIGNAL_LABELS.STRONG_HIRE,
     className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   },
   HIRE: {
-    label: "Hire",
+    label: SIGNAL_LABELS.HIRE,
     className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   },
   NO_HIRE: {
-    label: "No Hire",
+    label: SIGNAL_LABELS.NO_HIRE,
     className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
   INCOMPLETE: {
-    label: "Not enough to judge",
+    label: SIGNAL_LABELS.INCOMPLETE,
     className: "bg-muted text-muted-foreground",
   },
 } as const satisfies Record<Feedback["overallSignal"], { label: string; className: string }>
@@ -29,7 +30,7 @@ function ScoreBadge({ score }: { score: number }) {
   return (
     <div className="flex items-baseline gap-1.5">
       <span className="text-2xl font-bold tabular-nums">{score}</span>
-      <span className="text-sm text-muted-foreground">/ 5 — {SCORE_LABELS[score]}</span>
+      <span className="text-sm text-muted-foreground">/ 5 · {SCORE_LABELS[score]}</span>
     </div>
   )
 }
@@ -100,11 +101,14 @@ export function FeedbackDisplay({
   feedback,
   sessionId,
   answeredQuestions,
+  plannedQuestions,
 }: {
   feedback: Feedback
   sessionId: string
-  // Main questions with an evaluation note; fewer than 5 after an early exit (#63).
+  // Main questions with an evaluation note; fewer than planned after an early exit (#63).
   answeredQuestions: number
+  // The session plan's total: 5 for a single round, 12 for a loop (#73).
+  plannedQuestions: number
 }) {
   // Also applied at display time, so feedback graded before #63 (a stored verdict
   // on one or two answers) reads as "Not enough to judge" too.
@@ -120,9 +124,9 @@ export function FeedbackDisplay({
         <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${signal.className}`}>
           {signal.label}
         </span>
-        {answeredQuestions < MAX_MAIN_QUESTIONS && (
+        {answeredQuestions < plannedQuestions && (
           <p className="text-xs text-muted-foreground">
-            Based on {answeredQuestions} of {MAX_MAIN_QUESTIONS} questions — the
+            Based on {answeredQuestions} of {plannedQuestions} questions. The
             interview ended early, so treat the scores as provisional.
           </p>
         )}

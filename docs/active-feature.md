@@ -8,11 +8,32 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- _Release v0.3.0 in progress (#52 + #63, two migrations) — then pick the next issue from the board._
+- **#78 Atelier hygiene pass** (`fix/atelier-hygiene`), step 1 of the Atelier plan
+  - Scope: font fix (#77) merged back into `develop`; em dashes out of user-facing copy;
+    /login with logo, way back and context; `AppHeader` on dashboard, settings and
+    feedback (logo in the live interview bar); history rows show verdict and scores;
+    saved CV collapsed to one line.
 
 ---
 
 ## History
+
+- 2026-10-27  Multi-round loop, owner-only (#73, PR #76): rounds, soft gates, loop
+  grading and cron rules.  ✓
+
+- 2026-09-28  Stage-aware foundation (#72, PR #75): `Stage`/`StageVerdict`,
+  `InterviewSession.stages` + `roundEndedAt`, `Question.stage`, `StageResult`;
+  `STAGE_PLANS`, `stageProgress`, `END_STAGE`; progress line in the chat. Free path
+  frozen by `eval:check`.  ✓
+
+- 2026-09-28  Role + company fields (#65, PR #69): optional `InterviewSession.company`
+  (migration), separate form field, `interviewTitle()` "Role at Company" across UI and
+  email; prompts use the company and never invent one; feedback written to "you",
+  never he/she. Ships in the next release.  ✓
+
+- 2026-09-28  Release **v0.3.0** (PR #68, tagged): #52 model tiers + daily free cap,
+  #63 honest grading. Both migrations applied to production before the merge;
+  main/develop reconciled in #67 after the squashed #62.  ✓
 
 - 2026-09-28  Question count + honest grading (#63, PR #66): directives carry "main
   question N of 5"; fewer than 3 answered questions → `INCOMPLETE` ("Not enough to

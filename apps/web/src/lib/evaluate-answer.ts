@@ -1,9 +1,9 @@
 import { generateObject } from "ai"
-import type { ModelTier } from "@mockmate/db"
+import type { ModelTier, Stage } from "@mockmate/db"
 
 import { gradingModel, noteDepth, outputLimits } from "@/lib/ai"
 import { buildCandidateProfile } from "@/lib/interview-context"
-import { evaluationNoteSchema, type EvaluationNote } from "@/types/interview"
+import { STAGE_LABELS, evaluationNoteSchema, type EvaluationNote } from "@/types/interview"
 import type { InterviewContext, InterviewTurn } from "@/types/interview"
 
 // Focused instruction for the hidden evaluation note (PRD §6 "Evaluation logging").
@@ -26,11 +26,14 @@ export async function generateEvaluationNote({
   questionText,
   conversation,
   tier,
+  stage,
 }: {
   context: InterviewContext
   questionText: string
   conversation: InterviewTurn[]
   tier: ModelTier
+  // The round, for multi-round loops only (#73); a single round passes nothing.
+  stage?: Stage
 }): Promise<EvaluationNote> {
   const transcript = conversation
     .map(
@@ -49,7 +52,7 @@ export async function generateEvaluationNote({
     messages: [
       {
         role: "user",
-        content: `Interview:\n${buildCandidateProfile(context)}\n\nMain question:\n${questionText}\n\nTranscript for this question:\n${transcript}`,
+        content: `Interview:\n${buildCandidateProfile(context)}\n\nMain question:\n${questionText}${stage ? `\n\nRound: ${STAGE_LABELS[stage]}` : ""}\n\nTranscript for this question:\n${transcript}`,
       },
     ],
   })

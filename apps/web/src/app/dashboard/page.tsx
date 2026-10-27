@@ -3,11 +3,11 @@ import { auth } from "@/auth"
 import { NewInterviewForm } from "@/components/interview/NewInterviewForm"
 import { ResumeBanner } from "@/components/dashboard/ResumeBanner"
 import { SessionHistory } from "@/components/dashboard/SessionHistory"
-import { UserMenu } from "@/components/dashboard/UserMenu"
 
 export default async function DashboardPage() {
   const session = await auth()
   const user = session?.user
+  const firstName = user?.name?.trim().split(/\s+/)[0]
 
   // Pre-fill the resume textarea from the user's last uploaded CV, and read the
   // billing entitlement so the form can offer free vs. credit (#16).
@@ -31,29 +31,24 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
-      <header className="flex w-full max-w-2xl items-center justify-between gap-4">
-        <div className="text-left">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Welcome{user?.name ? `, ${user.name}` : ""}.
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Paste a resume and a job description to start a mock interview.
-          </p>
-        </div>
-        <UserMenu
-          name={user?.name ?? null}
-          email={user?.email ?? null}
-          image={user?.image ?? null}
-        />
-      </header>
+      <div className="w-full max-w-2xl">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Welcome back{firstName ? `, ${firstName}` : ""}.
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Pick a role and start. Your CV and the job posting are optional and make the
+          questions sharper.
+        </p>
+      </div>
 
       {user?.id && (
-        <div className="mt-10 w-full max-w-2xl">
+        // empty:hidden drops the wrapper (and its margin) when there is no banner.
+        <div className="mt-8 w-full max-w-2xl empty:hidden">
           <ResumeBanner userId={user.id} />
         </div>
       )}
 
-      <div className="mt-6 w-full max-w-2xl">
+      <div className="mt-8 w-full max-w-2xl">
         <NewInterviewForm
           savedResume={savedResume}
           credits={credits}

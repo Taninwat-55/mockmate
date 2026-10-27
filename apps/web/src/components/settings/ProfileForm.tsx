@@ -49,7 +49,7 @@ export function ProfileForm({ name, email, image }: ProfileFormProps) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{name || "—"}</p>
+          <p className="truncate text-sm font-medium">{name || "No name set"}</p>
           <p className="truncate text-sm text-muted-foreground">{email}</p>
         </div>
       </div>
@@ -70,7 +70,7 @@ export function ProfileForm({ name, email, image }: ProfileFormProps) {
         <Label htmlFor="email">Email</Label>
         <Input id="email" value={email} disabled readOnly />
         <p className="text-xs text-muted-foreground">
-          Managed by your Google account — it can&apos;t be changed here.
+          Managed by your Google account, so it can&apos;t be changed here.
         </p>
       </div>
 

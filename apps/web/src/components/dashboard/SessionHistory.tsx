@@ -1,6 +1,10 @@
 import Link from "next/link"
 import { prisma, InterviewSessionStatus } from "@mockmate/db"
 
+import { interviewTitle } from "@/lib/interview-context"
+import { MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+import { SIGNAL_LABELS } from "@/types/interview"
+
 interface SessionHistoryProps {
   userId: string
 }
@@ -34,13 +38,29 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: hasPaidHistory ? undefined : FREE_HISTORY_LIMIT,
-    select: { id: true, title: true, status: true, createdAt: true },
+    select: {
+      id: true,
+      title: true,
+      company: true,
+      status: true,
+      createdAt: true,
+      feedback: {
+        select: {
+          overallSignal: true,
+          roleKnowledgeScore: true,
+          communicationClarityScore: true,
+          problemSolvingScore: true,
+        },
+      },
+      // Same rule as the feedback page: too few graded answers means no verdict (#63).
+      _count: { select: { questions: { where: { evaluationNote: { not: null } } } } },
+    },
   })
 
   if (sessions.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No interviews yet — start one above.
+        No interviews yet. Start one above.
       </p>
     )
   }
@@ -55,15 +75,39 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
           year: "numeric",
         })
 
+        const { feedback } = session
+        const signal =
+          feedback &&
+          SIGNAL_LABELS[
+            session._count.questions < MIN_QUESTIONS_FOR_VERDICT
+              ? "INCOMPLETE"
+              : feedback.overallSignal
+          ]
+
         const row = (
-          <div className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm">
-            <span className="font-medium truncate mr-4">{session.title}</span>
-            <div className="flex items-center gap-3 shrink-0">
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CLASS[session.status]}`}
-              >
-                {STATUS_LABEL[session.status]}
-              </span>
+          <div className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3 text-sm">
+            <div className="min-w-0">
+              <p className="truncate font-medium">{interviewTitle(session)}</p>
+              {feedback && (
+                <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                  Role {feedback.roleKnowledgeScore}/5 · Communication{" "}
+                  {feedback.communicationClarityScore}/5 · Problem-solving{" "}
+                  {feedback.problemSolvingScore}/5
+                </p>
+              )}
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+              {signal ? (
+                <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium">
+                  {signal}
+                </span>
+              ) : (
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CLASS[session.status]}`}
+                >
+                  {STATUS_LABEL[session.status]}
+                </span>
+              )}
               <span className="text-muted-foreground">{date}</span>
             </div>
           </div>

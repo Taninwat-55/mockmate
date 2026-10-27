@@ -12,11 +12,11 @@ export const SITE_URL = process.env.AUTH_URL ?? "https://mockmate.space"
 export const SITE_NAME = "MockMate"
 
 /** Default <title> when a page doesn't set its own. */
-export const SITE_TITLE = "MockMate — AI Mock Interviews with Graded Feedback"
+export const SITE_TITLE = "MockMate · AI Mock Interviews with Graded Feedback"
 
 /** Meta description — kept under ~160 chars for search snippets. */
 export const SITE_DESCRIPTION =
-  "Practice realistic AI mock interviews tailored to the job you're targeting, then get graded feedback across three dimensions — like a real hiring panel."
+  "Practice realistic AI mock interviews tailored to the job you're targeting, then get graded feedback across three dimensions, like a real hiring panel."
 
 /** Short marketing line used on the OG/share image. */
 export const SITE_TAGLINE = "AI mock interviews with graded feedback"

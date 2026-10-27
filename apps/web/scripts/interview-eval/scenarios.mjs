@@ -6,7 +6,7 @@ export const SCENARIOS = [
   {
     id: "barista-student-weak",
     expect: "weak",
-    context: { role: "Barista at Espresso House", seniority: "STUDENT", workSetting: "ONSITE", employmentType: "PART_TIME" },
+    context: { role: "Barista", company: "Espresso House", seniority: "STUDENT", workSetting: "ONSITE", employmentType: "PART_TIME" },
     persona:
       "You are a nervous 18-year-old student applying for your first job. You have no café experience, only babysitting and helping at a school event. Your first answer to each question is short and vague (1-3 sentences, generic phrases like 'I'm a people person'). When pushed with a follow-up you get a bit more concrete, sometimes. Never make up impressive experience.",
   },

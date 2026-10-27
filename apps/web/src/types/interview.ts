@@ -2,7 +2,14 @@ import { z } from "zod"
 
 // Type-only: the label maps below are used by the (client) setup form, which must
 // not pull the Prisma client into the browser bundle.
-import type { EmploymentType, ModelTier, Seniority, WorkSetting } from "@mockmate/db"
+import type {
+  EmploymentType,
+  ModelTier,
+  OverallSignal,
+  Seniority,
+  Stage,
+  WorkSetting,
+} from "@mockmate/db"
 
 // ============================================================
 // Interview context (#44) — role, level, work setting, employment type
@@ -36,9 +43,26 @@ export const MODEL_TIER_LABELS: Record<ModelTier, string> = {
   MAX: "Max",
 }
 
+// Verdict names, shared by the feedback page and the dashboard history (#78).
+export const SIGNAL_LABELS: Record<OverallSignal, string> = {
+  STRONG_HIRE: "Strong Hire",
+  HIRE: "Hire",
+  NO_HIRE: "No Hire",
+  INCOMPLETE: "Not enough to judge",
+}
+
+// Round names (#73), shown in the progress line and gate, and used in the prompts.
+export const STAGE_LABELS: Record<Stage, string> = {
+  SCREENING: "Screening",
+  HIRING_MANAGER: "Hiring manager",
+  ASSESSMENT: "Assessment",
+  FINAL: "Final",
+}
+
 // What every prompt needs to know about the interview it is running.
 export type InterviewContext = {
   role: string
+  company?: string | null
   seniority: Seniority
   workSetting?: WorkSetting | null
   employmentType?: EmploymentType | null
@@ -80,11 +104,13 @@ export function parseEvaluationNote(raw: string): EvaluationNote {
 // - ASK_FOLLOWUP    weak answer, follow-ups still available
 // - MARK_UNRESOLVED weak answer after 2 follow-ups — log unresolved, then move on
 // - NEXT_QUESTION   answer accepted (or unresolved), more main questions remain
-// - END_SESSION     this was the 5th main question — end and trigger grading
+// - END_STAGE       last question of a round, more rounds follow — the soft gate (#46)
+// - END_SESSION     last question of the last round — end and trigger grading
 export type InterviewAction =
   | "ASK_FOLLOWUP"
   | "MARK_UNRESOLVED"
   | "NEXT_QUESTION"
+  | "END_STAGE"
   | "END_SESSION"
 
 // Result of assessing a single answer. `tooShort` is deterministic (word count);
