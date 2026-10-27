@@ -70,7 +70,7 @@ export default async function FeedbackPage({
           <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
             Back to dashboard
           </Link>
-          <Link href="/dashboard" className={buttonVariants()}>
+          <Link href="/interview/new" className={buttonVariants()}>
             Start new interview
           </Link>
         </div>
