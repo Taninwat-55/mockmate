@@ -16,10 +16,10 @@ export default function BuySuccessPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           Your credits are being added to your account. This usually takes a few
-          seconds. Start a Pro interview whenever you&apos;re ready.
+          seconds.
         </p>
-        <Link href="/dashboard" className={buttonVariants()}>
-          Go to dashboard
+        <Link href="/interview/new" className={buttonVariants()}>
+          Start a Pro interview
         </Link>
       </div>
     </main>

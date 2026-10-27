@@ -1,9 +1,11 @@
 import Link from "next/link"
+import { Clock } from "lucide-react"
 import { prisma, InterviewSessionStatus } from "@mockmate/db"
 
 import { interviewTitle } from "@/lib/interview-context"
-import { stageProgress } from "@/lib/interview-engine"
+import { plannedQuestions, stageProgress } from "@/lib/interview-engine"
 import { STAGE_LABELS } from "@/types/interview"
+import { buttonVariants } from "@/components/ui/button"
 
 // How long a loop may wait between rounds before the cron closes it (#73).
 const BETWEEN_ROUNDS_DAYS = 7
@@ -38,25 +40,40 @@ export async function ResumeBanner({ userId }: ResumeBannerProps) {
       month: "long",
     })
 
+  const asked = session.questions.length
+  const planned = plannedQuestions(session.stages)
+
+  // The slim "pick up where you left off" strip from Direction A (#87).
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800/30 dark:bg-amber-900/20">
-      <div className="flex items-center justify-between gap-4">
+    <div className="flex flex-col gap-4 rounded-xl border border-border border-l-[3px] border-l-foreground bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-4">
+        <Clock className="size-6 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+          <p className="text-sm font-semibold">
             {nextStage
               ? `Round ${progress.round} of ${progress.rounds} done. The ${STAGE_LABELS[nextStage].toLowerCase()} round is next`
-              : "You have an unfinished interview"}
+              : "Pick up where you left off"}
           </p>
-          <p className="mt-0.5 truncate text-xs text-amber-700 dark:text-amber-400">
-            {interviewTitle(session)}
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{interviewTitle(session)}</span>
+            {" · "}
+            {asked} of {planned} questions
             {until && ` · continue by ${until}`}
           </p>
         </div>
-        <Link
-          href={`/interview/${session.id}`}
-          className="shrink-0 rounded-md bg-amber-900 px-3 py-1.5 text-xs font-medium text-amber-50 transition-opacity hover:opacity-80 dark:bg-amber-200 dark:text-amber-900"
-        >
-          {nextStage ? "Continue →" : "Resume interview →"}
+      </div>
+      <div className="flex shrink-0 items-center gap-4">
+        {/* One segment per planned question, like the score bars. */}
+        <div className="hidden w-32 gap-1 sm:flex" aria-hidden="true">
+          {Array.from({ length: planned }, (_, i) => (
+            <span
+              key={i}
+              className={`h-1.5 flex-1 rounded-full ${i < asked ? "bg-foreground" : "bg-border"}`}
+            />
+          ))}
+        </div>
+        <Link href={`/interview/${session.id}`} className={buttonVariants({ size: "sm" })}>
+          {nextStage ? "Continue" : "Resume interview"} →
         </Link>
       </div>
     </div>
