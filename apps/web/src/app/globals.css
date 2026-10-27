@@ -162,6 +162,51 @@
   }
 }
 
+/* The same moment on the landing sample (#85), scrubbed by scroll instead of
+   the clock: the stamp by the card's position, each row by its own. Ranges are
+   fractions of the element's trip across the viewport; browsers without
+   scroll-driven animations show the finished card. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-verdict-scroll] {
+      view-timeline-name: --report;
+    }
+    [data-verdict-scroll] :is(.v-stamp, .v-after, .v-row, .v-segment, .v-tip) {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-duration: auto;
+      animation-timeline: --report;
+    }
+    [data-verdict-scroll] .v-stamp {
+      animation-name: verdict-press;
+      animation-range: cover 14% cover 24%;
+    }
+    [data-verdict-scroll] .v-after {
+      animation-name: verdict-fade;
+      animation-range: cover 22% cover 30%;
+    }
+    /* Rows drive their own bars and note: on a phone the card is far taller
+       than the screen, so one card-wide timeline would land them off-screen. */
+    [data-verdict-scroll] .v-row {
+      view-timeline-name: --row;
+      animation-name: verdict-fade;
+      animation-timeline: --row;
+      animation-range: entry 0% entry 60%;
+    }
+    [data-verdict-scroll] .v-segment {
+      transform-origin: left;
+      animation-name: verdict-fill;
+      animation-timeline: --row;
+      animation-range: entry calc(40% + var(--seg) * 10%) entry calc(70% + var(--seg) * 10%);
+    }
+    [data-verdict-scroll] .v-tip {
+      animation-name: verdict-fade;
+      animation-timeline: --row;
+      animation-range: cover 22% cover 32%;
+    }
+  }
+}
+
 @keyframes verdict-press {
   0%   { opacity: 0; transform: scale(1.35); }
   60%  { opacity: 1; transform: scale(0.97); }

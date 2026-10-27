@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import { auth } from "@/auth"
 import { Logo } from "@/components/brand/Logo"
+import { LABEL, Note, ROW_VARS, ScoreBar, VerdictStamp } from "@/components/interview/VerdictParts"
 import {
   getWebSiteSchema,
   getOrganizationSchema,
@@ -261,28 +262,46 @@ export default async function Home() {
               </h2>
             </div>
 
-            <div className="reveal mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(0,0,0,0.04),0_24px_60px_-24px_rgba(0,0,0,0.18)]">
-              <div className="border-b border-border px-8 py-10 text-center">
-                <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Interview report</p>
-                <p className="mt-1.5 text-[15px] font-medium tracking-[-0.01em]">Barista · Entry-level</p>
-                <div className="mt-6 inline-flex items-center gap-2.5 whitespace-nowrap rounded-lg bg-primary px-6 py-3.5 text-primary-foreground">
-                  <span className="inline-block size-3 shrink-0 rotate-45 border-[1.5px] border-primary-foreground" />
-                  <span className="font-mono text-[22px] font-semibold tracking-[0.02em]">STRONG HIRE</span>
+            {/* The verdict moment again (#85), scrubbed by this card's position on screen. */}
+            <div
+              data-verdict-scroll=""
+              className="mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_24px_60px_-24px_rgba(0,0,0,0.18)]"
+            >
+              <div className="px-6 pt-10 pb-8 text-center sm:px-8">
+                <p className={LABEL}>Interview report</p>
+                <p className="mt-1.5 text-[15px] font-semibold tracking-[-0.01em]">Barista · Entry-level</p>
+                <p className={`mt-8 ${LABEL}`}>Your result</p>
+                <VerdictStamp label="Strong Hire" variant="solid" compact />
+                <div className="v-after">
+                  <p className="mt-4 inline-flex items-baseline gap-1.5 rounded-full border border-border bg-background px-4 py-1.5 font-mono text-xs text-muted-foreground">
+                    <span className="text-base font-semibold text-foreground tabular-nums">4.7</span>
+                    / 5 overall
+                  </p>
+                  <p className="mx-auto mt-5 max-w-[52ch] text-[14.5px] leading-relaxed text-muted-foreground">
+                    Stayed calm under pressure, gave real examples from school and a summer job,
+                    and handled the upset-customer follow-up with care. Exactly what this role
+                    calls for.
+                  </p>
                 </div>
-                <div className="mt-5 flex items-center justify-center gap-2 whitespace-nowrap font-mono text-[13px] text-muted-foreground">
-                  <span className="text-[15px] font-semibold text-foreground">4.7</span>
-                  <span className="text-faint">/ 5 overall</span>
-                </div>
-                <p className="mx-auto mt-5 max-w-[52ch] text-[14.5px] leading-relaxed text-muted-foreground">
-                  Stayed calm under pressure, gave real examples from school and a summer job,
-                  and handled the upset-customer follow-up with care. Exactly what this role
-                  calls for.
-                </p>
               </div>
-              <div className="divide-y divide-border">
-                <ScoreRow label="Role Knowledge" score={5} />
-                <ScoreRow label="Communication Clarity" score={4} />
-                <ScoreRow label="Problem-solving Approach" score={5} />
+              <div className="border-t border-border px-6 sm:px-8">
+                {SAMPLE_ROWS.map((row, i) => (
+                  <div
+                    key={row.label}
+                    className={`v-row grid gap-4 border-t border-border py-6 first:border-t-0 sm:grid-cols-[13rem_1fr] sm:gap-8 ${ROW_VARS[i]}`}
+                  >
+                    <div>
+                      <p className="text-[15px] font-semibold tracking-tight">
+                        {row.label}{" "}
+                        <span className="font-mono text-[13px] font-normal text-muted-foreground">
+                          {row.score}/5
+                        </span>
+                      </p>
+                      <ScoreBar score={row.score} />
+                    </div>
+                    <Note kind="tip" text={row.tip} />
+                  </div>
+                ))}
               </div>
               <div className="border-t border-border bg-muted/50 px-8 py-4 text-center">
                 <p className="font-mono text-[11.5px] text-faint">
@@ -437,21 +456,24 @@ export default async function Home() {
   )
 }
 
-function ScoreRow({ label, score }: { label: string; score: number }) {
-  return (
-    <div className="grid items-center gap-4 px-8 py-6 sm:grid-cols-[200px_1fr_auto]">
-      <div className="text-[15px] font-medium">{label}</div>
-      <div className="flex gap-1.5">
-        {Array.from({ length: 5 }, (_, i) => (
-          <span key={i} className={`h-2 flex-1 rounded-full ${i < score ? "bg-foreground" : "bg-border"}`} />
-        ))}
-      </div>
-      <div className="font-mono text-[14px] font-semibold">
-        {score}<span className="font-normal text-faint">/5</span>
-      </div>
-    </div>
-  )
-}
+// The landing sample's rows: the score plus the one "Next time" note (#85).
+const SAMPLE_ROWS = [
+  {
+    label: "Role Knowledge",
+    score: 5,
+    tip: "Name the drink you'd recommend to a regular who's in a hurry, and why.",
+  },
+  {
+    label: "Communication Clarity",
+    score: 4,
+    tip: "Open with what happened in one sentence, then tell the story behind it.",
+  },
+  {
+    label: "Problem-solving Approach",
+    score: 5,
+    tip: "End each example with a result: how long the queue was after the change.",
+  },
+] as const
 
 const steps = [
   {
