@@ -15,10 +15,12 @@ type AppHeaderProps = {
 // account menu sits on the right.
 export function AppHeader({ user, width = "2xl" }: AppHeaderProps) {
   return (
-    <header className="border-b border-border">
+    <header className={`border-b border-border ${width === "3xl" ? "" : "px-6"}`}>
+      {/* Mirrors each page's padding model so the logo lines up with the content:
+          dashboard/settings pad outside the 2xl column, feedback pads inside its 3xl one. */}
       <div
-        className={`mx-auto flex h-14 w-full items-center justify-between px-6 ${
-          width === "3xl" ? "max-w-3xl" : "max-w-2xl"
+        className={`mx-auto flex h-14 w-full items-center justify-between ${
+          width === "3xl" ? "max-w-3xl px-6" : "max-w-2xl"
         }`}
       >
         <Link

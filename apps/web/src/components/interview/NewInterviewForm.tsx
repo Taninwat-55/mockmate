@@ -204,8 +204,8 @@ export function NewInterviewForm({
               key={role}
               type="button"
               size="xs"
-              variant="ghost"
-              className="rounded-full text-muted-foreground"
+              variant="outline"
+              className="rounded-full text-muted-foreground hover:text-foreground"
               disabled={busy}
               onClick={() => setTitle(role)}
             >
