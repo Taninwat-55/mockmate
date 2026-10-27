@@ -8,15 +8,17 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#85 landing sample plays the verdict moment** (`feature/landing-verdict-echo`), step 4.1 of the Atelier plan
-  - Scope: sample report rebuilt from the shared `VerdictParts`; scroll-driven: stamp on the
-    card's timeline, bars and "Next time" notes on each row's own; reduced motion and
-    browsers without scroll timelines show the finished card.
-  - Next: dashboard to Direction B, then the interview room.
+- **Release v0.4.0** (`develop` → `main`), step 5 of the Atelier plan: smoke test on
+  mockmate.space at 390 and desktop, tag, portfolio "shipped" snapshot.
 
 ---
 
 ## History
+
+- 2026-10-27  Atelier step 4 and proof pass: landing sample plays the verdict moment on
+  scroll (#85, PR #86); dashboard to Direction A with the setup form on /interview/new
+  (#87, PR #88); interview room to Direction B with the pinned prompt (#89, PR #90);
+  generating state matches the report (#91, PR #92); dashboard title row wraps (#93).  ✓
 
 - 2026-10-27  Identity + verdict moment (#82, PR #84): paper/ink/pen tokens, the ◆ mark,
   feedback page to Direction A, the verdict moment (once per session via cookie).  ✓
