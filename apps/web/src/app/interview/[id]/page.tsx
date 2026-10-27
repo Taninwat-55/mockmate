@@ -89,28 +89,28 @@ export default async function InterviewPage({
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Leaving mid-interview is safe: the session resumes from the dashboard. */}
-          <Link
-            href="/dashboard"
-            aria-label="MockMate dashboard"
-            className="shrink-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <Logo className="size-5" />
-          </Link>
-          <h1 className="truncate text-sm font-medium tracking-tight">{interviewTitle(interview)}</h1>
-        </div>
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-            TIER_BADGE[interview.modelTier].className
-          }`}
-          title={TIER_BADGE[interview.modelTier].title}
-        >
-          {MODEL_TIER_LABELS[interview.modelTier]}
-        </span>
-      </header>
       <InterviewChat
+        header={
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Leaving mid-interview is safe: the session resumes from the dashboard. */}
+            <Link
+              href="/dashboard"
+              aria-label="MockMate dashboard"
+              className="shrink-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Logo className="size-5" />
+            </Link>
+            <h1 className="truncate text-sm font-semibold tracking-tight">{interviewTitle(interview)}</h1>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                TIER_BADGE[interview.modelTier].className
+              }`}
+              title={TIER_BADGE[interview.modelTier].title}
+            >
+              {MODEL_TIER_LABELS[interview.modelTier]}
+            </span>
+          </div>
+        }
         sessionId={interview.id}
         initialMessages={initialMessages}
         initialProgress={stageProgress(interview.stages, interview.questions)}
