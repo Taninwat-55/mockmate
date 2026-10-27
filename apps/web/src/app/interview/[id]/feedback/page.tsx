@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { AppHeader } from "@/components/layout/AppHeader"
 import { FeedbackDisplay } from "@/components/interview/FeedbackDisplay"
 import { FeedbackGenerator } from "@/components/interview/FeedbackGenerator"
+import { LABEL } from "@/components/interview/VerdictParts"
 
 export default async function FeedbackPage({
   params,
@@ -58,22 +59,27 @@ export default async function FeedbackPage({
           />
         ) : (
           <>
-            <div className="mb-8 space-y-1">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Feedback</p>
-              <h1 className="text-2xl font-semibold tracking-tight">{interviewTitle(interview)}</h1>
-            </div>
+            {/* Same heading as the report, so the verdict lands on the page you're already on (#91). */}
+            <header className="text-center">
+              <p className={LABEL}>Interview report</p>
+              <h1 className="mt-2 text-balance text-2xl font-semibold tracking-tight">
+                {interviewTitle(interview)}
+              </h1>
+            </header>
             <FeedbackGenerator sessionId={id} />
           </>
         )}
 
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
-            Back to dashboard
-          </Link>
-          <Link href="/interview/new" className={buttonVariants()}>
-            Start new interview
-          </Link>
-        </div>
+        {feedback && (
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
+              Back to dashboard
+            </Link>
+            <Link href="/interview/new" className={buttonVariants()}>
+              Start new interview
+            </Link>
+          </div>
+        )}
       </main>
     </>
   )
