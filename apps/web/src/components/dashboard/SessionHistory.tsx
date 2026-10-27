@@ -72,7 +72,8 @@ export async function SessionHistory({ userId }: SessionHistoryProps) {
           {total}
         </span>
       </div>
-      <ul className="grid gap-4 sm:grid-cols-2">
+      {/* grid-cols-1 is minmax(0, 1fr): without it the column grows to the widest card. */}
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {sessions.map((session) => {
           const date = session.createdAt.toLocaleDateString("en-GB", {
             day: "numeric",

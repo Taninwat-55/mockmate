@@ -44,7 +44,7 @@ function CharCount({ value }: { value: string }) {
   const over = value.length > MAX_INPUT_CHARS
   return (
     <span
-      className={`text-xs tabular-nums ${
+      className={`whitespace-nowrap text-xs tabular-nums ${
         over ? "text-destructive" : "text-muted-foreground"
       }`}
     >
@@ -321,7 +321,7 @@ export function NewInterviewForm({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <label htmlFor="jobDescription" className="text-sm font-medium">
             Job posting{" "}
             <span className="font-normal text-muted-foreground">
