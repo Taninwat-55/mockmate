@@ -38,13 +38,37 @@ function progressLabel(p: StageProgress): string {
   return p.rounds > 1 ? `Round ${p.round} of ${p.rounds} · ${question}` : question
 }
 
+// One dot per main question in the round: done, current (ring), still to come.
+function ProgressDots({ p }: { p: StageProgress }) {
+  const current = Math.max(p.question, 1)
+  return (
+    <span className="hidden items-center gap-1.5 sm:flex" aria-hidden="true">
+      {Array.from({ length: p.questions }, (_, i) => (
+        <span
+          key={i}
+          className={`size-1.5 rounded-full ${
+            i + 1 < current
+              ? "bg-foreground"
+              : i + 1 === current
+                ? "ring-[1.5px] ring-foreground"
+                : "bg-border"
+          }`}
+        />
+      ))}
+    </span>
+  )
+}
+
 export function InterviewChat({
+  header,
   sessionId,
   initialMessages,
   initialProgress,
   stages,
   initialRoundEnded,
 }: {
+  // Left side of the top bar (logo, role, tier), rendered by the server page.
+  header: React.ReactNode
   sessionId: string
   initialMessages: InterviewUIMessage[]
   initialProgress: StageProgress
@@ -62,6 +86,7 @@ export function InterviewChat({
   const [timedOut, setTimedOut] = useState(false)
   const [opening, setOpening] = useState(initialMessages.length === 0)
   const startedRef = useRef(false)
+  const endRef = useRef<HTMLDivElement>(null)
 
   const { messages, sendMessage, regenerate, status, setMessages } =
     useChat<InterviewUIMessage>({
@@ -122,6 +147,12 @@ export function InterviewChat({
     return () => clearTimeout(timer)
   }, [status])
 
+  // Keep the latest turn in view. Instant under reduced motion.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    endRef.current?.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" })
+  }, [messages.length, status])
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const text = input.trim()
@@ -147,44 +178,89 @@ export function InterviewChat({
 
   const showRetry = hasError || (timedOut && status === "submitted")
 
+  // The pinned prompt is the interviewer's latest turn (Direction B, #89); the
+  // transcript below holds everything before it, so nothing shows twice.
+  const lastInterviewerIndex = messages.findLastIndex((m) => m.role === "assistant")
+  const pinned = lastInterviewerIndex >= 0 ? messages[lastInterviewerIndex] : undefined
+  const transcript = messages.filter((_, i) => i !== lastInterviewerIndex)
+  const pinnedText = pinned ? textOf(pinned) : ""
+
   return (
     <div className="flex flex-1 flex-col">
-      <p className="border-b border-border px-4 py-2 text-xs text-muted-foreground" aria-live="polite">
-        {progressLabel(progress)}
-      </p>
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
-        {opening && messages.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground">
-            Preparing your first question…
+      <div className="sticky top-0 z-10 bg-background">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
+          {header}
+          <div className="flex shrink-0 items-center gap-3">
+            <ProgressDots p={progress} />
+            {!completed && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleEndEarly}
+                disabled={opening}
+              >
+                End interview
+              </Button>
+            )}
+          </div>
+        </header>
+
+        <div className="border-b border-border border-l-[3px] border-l-pen bg-muted/60 px-4 py-5 sm:px-6">
+          <div className="mx-auto max-w-3xl">
+            <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint" aria-live="polite">
+              {completed ? "Interview over" : progressLabel(progress)}
+            </p>
+            <p className="mt-2 max-h-[40vh] overflow-y-auto text-[17px] leading-relaxed whitespace-pre-wrap sm:text-lg">
+              {opening && !pinned
+                ? "Preparing your first question…"
+                : pinnedText || (status === "streaming" ? "…" : "")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">
+        {transcript.length > 0 && (
+          <p className="mb-5 font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
+            Transcript
           </p>
-        ) : (
-          messages.map((message) => {
+        )}
+        <div className="space-y-4">
+          {transcript.map((message) => {
             const isInterviewer = message.role === "assistant"
             return (
               <div
                 key={message.id}
-                className={`flex ${isInterviewer ? "justify-start" : "justify-end"}`}
+                className={`flex gap-3 ${isInterviewer ? "justify-start" : "justify-end"}`}
               >
+                {isInterviewer && (
+                  <span
+                    className="mt-1 grid size-6 shrink-0 place-items-center rounded-md bg-foreground font-mono text-[11px] font-semibold text-background"
+                    aria-hidden="true"
+                  >
+                    M
+                  </span>
+                )}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
-                    isInterviewer
-                      ? "bg-muted text-foreground"
-                      : "bg-primary text-primary-foreground"
+                  className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                    isInterviewer ? "border border-border bg-card" : "bg-muted"
                   }`}
                 >
-                  {textOf(message) || (isInterviewer && status === "streaming" ? "…" : "")}
+                  <span className="sr-only">{isInterviewer ? "Interviewer: " : "You: "}</span>
+                  {textOf(message)}
                 </div>
               </div>
             )
-          })
-        )}
+          })}
+        </div>
 
         {status === "submitted" && !timedOut && (
-          <p className="text-center text-xs text-muted-foreground">Thinking…</p>
+          <p className="mt-6 text-center font-mono text-xs text-muted-foreground">Thinking…</p>
         )}
 
         {showRetry && (
-          <div className="flex flex-col items-center gap-2 py-2">
+          <div className="mt-6 flex flex-col items-center gap-2">
             <p className="text-sm text-muted-foreground">
               {timedOut
                 ? "This is taking longer than expected. Your progress is saved."
@@ -202,67 +278,73 @@ export function InterviewChat({
             </Button>
           </div>
         )}
+        {/* Margin keeps the latest turn clear of the sticky composer when scrolled to. */}
+        <div ref={endRef} className="scroll-mb-56" />
       </div>
 
-      {completed ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-4">
-          <p className="text-sm text-muted-foreground">The interview is over.</p>
-          <Button onClick={() => router.refresh()}>See your results →</Button>
-        </div>
-      ) : betweenRounds && stages[progress.round] ? (
-        <RoundGate
-          sessionId={sessionId}
-          endedRound={STAGE_LABELS[progress.stage].toLowerCase()}
-          nextRound={STAGE_LABELS[stages[progress.round]].toLowerCase()}
-          onContinued={(question, next) => {
-            setMessages((prev) => [
-              ...prev,
-              { id: question.id, role: "assistant", parts: [{ type: "text", text: question.text }] },
-            ])
-            setProgress(next)
-            setBetweenRounds(false)
-          }}
-        />
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-2 border-t border-border px-4 py-4"
-        >
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)
-              }
-            }}
-            placeholder="Type your answer… (Enter to send, Shift+Enter for a new line)"
-            maxLength={MAX_ANSWER_CHARS}
-            disabled={busy || opening}
-            className="min-h-24"
-          />
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {formatCount(input.length)} / {formatCount(MAX_ANSWER_CHARS)}
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleEndEarly}
-                disabled={opening}
-              >
-                End Interview Early
-              </Button>
-              <Button type="submit" size="sm" disabled={busy || opening || !input.trim()}>
-                {busy ? "Sending…" : "Send"}
-              </Button>
-            </div>
+      <div className="sticky bottom-0 border-t border-border bg-background">
+        {completed ? (
+          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+            <p className="text-sm text-muted-foreground">The interview is over.</p>
+            <Button onClick={() => router.refresh()}>See your results →</Button>
           </div>
-        </form>
-      )}
+        ) : betweenRounds && stages[progress.round] ? (
+          <RoundGate
+            sessionId={sessionId}
+            endedRound={STAGE_LABELS[progress.stage].toLowerCase()}
+            nextRound={STAGE_LABELS[stages[progress.round]].toLowerCase()}
+            onContinued={(question, next) => {
+              setMessages((prev) => [
+                ...prev,
+                { id: question.id, role: "assistant", parts: [{ type: "text", text: question.text }] },
+              ])
+              setProgress(next)
+              setBetweenRounds(false)
+            }}
+          />
+        ) : (
+          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-3xl px-4 py-4 sm:px-6">
+            {busy && (
+              <p className="mb-2 font-mono text-xs text-muted-foreground" aria-live="polite">
+                MockMate is responding. Your next answer opens when it&apos;s done.
+              </p>
+            )}
+            <div className="rounded-xl border border-input bg-card focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30">
+              <label htmlFor="answer" className="sr-only">
+                Your answer
+              </label>
+              <Textarea
+                id="answer"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)
+                  }
+                }}
+                placeholder={busy ? "Waiting for MockMate…" : "Type your answer…"}
+                maxLength={MAX_ANSWER_CHARS}
+                disabled={busy || opening}
+                className="max-h-64 min-h-20 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+              />
+              <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2">
+                <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                  {formatCount(input.length)} / {formatCount(MAX_ANSWER_CHARS)}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="hidden font-mono text-[11px] text-faint sm:inline">
+                    ↵ to submit · ⇧↵ new line
+                  </span>
+                  <Button type="submit" size="sm" disabled={busy || opening || !input.trim()}>
+                    {busy ? "Sending…" : "Submit answer →"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 }

@@ -57,7 +57,7 @@ export async function ResumeBanner({ userId }: ResumeBannerProps) {
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{interviewTitle(session)}</span>
             {" · "}
-            {asked} of {planned} questions
+            question {asked} of {planned}
             {until && ` · continue by ${until}`}
           </p>
         </div>
