@@ -15,7 +15,7 @@ export default function BuySuccessPage() {
           Payment successful
         </h1>
         <p className="text-sm text-muted-foreground">
-          Your credits are being added to your account — this usually takes a few
+          Your credits are being added to your account. This usually takes a few
           seconds. Start a Pro interview whenever you&apos;re ready.
         </p>
         <Link href="/dashboard" className={buttonVariants()}>

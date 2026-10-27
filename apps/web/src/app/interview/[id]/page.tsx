@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { interviewTitle } from "@/lib/interview-context"
 import { stageProgress } from "@/lib/interview-engine"
 import { buttonVariants } from "@/components/ui/button"
+import { Logo } from "@/components/brand/Logo"
 import { InterviewChat } from "@/components/interview/InterviewChat"
 import type { InterviewUIMessage } from "@/types/interview-chat"
 import { MODEL_TIER_LABELS } from "@/types/interview"
@@ -18,8 +19,8 @@ import { MODEL_TIER_LABELS } from "@/types/interview"
 // Header badge per model tier (#52).
 const TIER_BADGE: Record<ModelTier, { className: string; title: string }> = {
   FREE: { className: "bg-muted text-muted-foreground", title: "Free session" },
-  PAID: { className: "bg-foreground text-background", title: "Pro session — deeper grading" },
-  MAX: { className: "bg-amber-500 text-black", title: "Max session — graded by 3.1 Pro (owner)" },
+  PAID: { className: "bg-foreground text-background", title: "Pro session, deeper grading" },
+  MAX: { className: "bg-amber-500 text-black", title: "Max session, graded by 3.1 Pro (owner)" },
 }
 
 export default async function InterviewPage({
@@ -89,7 +90,17 @@ export default async function InterviewPage({
   return (
     <main className="flex flex-1 flex-col">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <h1 className="text-sm font-medium tracking-tight">{interviewTitle(interview)}</h1>
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Leaving mid-interview is safe: the session resumes from the dashboard. */}
+          <Link
+            href="/dashboard"
+            aria-label="MockMate dashboard"
+            className="shrink-0 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <Logo className="size-5" />
+          </Link>
+          <h1 className="truncate text-sm font-medium tracking-tight">{interviewTitle(interview)}</h1>
+        </div>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
             TIER_BADGE[interview.modelTier].className

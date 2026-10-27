@@ -85,9 +85,12 @@ export function NewInterviewForm({
   // Owner only (#52): defaults to Pro, so the owner tests what customers get.
   const [ownerTier, setOwnerTier] = useState<ModelTier>("PAID")
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // A saved CV starts collapsed to one line, so the form stays short (#78).
+  const [editingResume, setEditingResume] = useState(false)
 
   // The saved CV is showing as long as the user hasn't edited it.
   const usingSavedResume = savedResume.length > 0 && resume === savedResume
+  const resumeCollapsed = usingSavedResume && !editingResume
   const busy = isPending || isParsing
 
   // Owners bypass entitlement entirely, so none of the free/credit/blocked
@@ -111,7 +114,7 @@ export function NewInterviewForm({
       return
     }
     if (file.size > MAX_PDF_BYTES) {
-      toast.error("That PDF is too large — please use one under 10 MB.")
+      toast.error("That PDF is too large. Please use one under 10 MB.")
       return
     }
 
@@ -119,14 +122,14 @@ export function NewInterviewForm({
     try {
       const text = await extractPdfText(file)
       if (!text) {
-        toast.error("Couldn't read any text from that PDF — paste it instead.")
+        toast.error("Couldn't read any text from that PDF. Paste it instead.")
         return
       }
       setResume(text) // fill the box first so nothing is lost, whatever the length
       if (text.length > MAX_INPUT_CHARS) {
         // Too long to save or start; the text is already in the textarea to trim.
         toast.warning(
-          `Your CV is ${formatCount(text.length)} characters — trim it to ${formatCount(
+          `Your CV is ${formatCount(text.length)} characters. Trim it to ${formatCount(
             MAX_INPUT_CHARS,
           )} to save and start.`,
         )
@@ -134,7 +137,7 @@ export function NewInterviewForm({
       }
       await saveResume(text)
     } catch {
-      toast.error("Couldn't read that PDF — paste your resume instead.")
+      toast.error("Couldn't read that PDF. Paste your resume instead.")
     } finally {
       setIsParsing(false)
     }
@@ -259,7 +262,7 @@ export function NewInterviewForm({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor="resume" className="text-sm font-medium">
+          <label htmlFor={resumeCollapsed ? undefined : "resume"} className="text-sm font-medium">
             Your resume{" "}
             <span className="font-normal text-muted-foreground">
               (optional, makes the questions sharper)
@@ -286,17 +289,33 @@ export function NewInterviewForm({
             </Button>
           </div>
         </div>
-        <Textarea
-          id="resume"
-          placeholder="Paste your resume as plain text…"
-          value={resume}
-          onChange={(e) => setResume(e.target.value)}
-          disabled={busy}
-          className="min-h-40"
-        />
-        {usingSavedResume && (
+        {resumeCollapsed ? (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-input px-3 py-2.5 text-sm">
+            <span className="text-muted-foreground">Using your saved CV</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => setEditingResume(true)}
+            >
+              Edit
+            </Button>
+          </div>
+        ) : (
+          <Textarea
+            id="resume"
+            placeholder="Paste your resume as plain text…"
+            value={resume}
+            onChange={(e) => setResume(e.target.value)}
+            disabled={busy}
+            autoFocus={editingResume}
+            className="min-h-40 max-h-96"
+          />
+        )}
+        {usingSavedResume && editingResume && (
           <p className="text-xs text-muted-foreground">
-            Using saved CV — paste to override.
+            Using your saved CV. Paste a new one to replace it for this interview.
           </p>
         )}
       </div>
@@ -347,7 +366,7 @@ export function NewInterviewForm({
               className="mt-1"
             />
             <span>
-              <span className="font-medium">Free weekly session</span> — full
+              <span className="font-medium">Free weekly session.</span> Full
               interview, web report. Resets every 7 days.
             </span>
           </label>
@@ -361,8 +380,8 @@ export function NewInterviewForm({
               className="mt-1"
             />
             <span>
-              <span className="font-medium">Use 1 credit — Pro interview</span> —
-              deeper grading, emailed report. You have {credits}.
+              <span className="font-medium">Use 1 credit for a Pro interview.</span>{" "}
+              Deeper grading, emailed report. You have {credits}.
             </span>
           </label>
         </fieldset>
@@ -372,7 +391,7 @@ export function NewInterviewForm({
         <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           This uses{" "}
           <span className="font-medium text-foreground">1 credit</span> for a Pro
-          interview — you have {credits}.
+          interview. You have {credits}.
         </p>
       )}
 

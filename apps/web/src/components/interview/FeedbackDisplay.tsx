@@ -1,24 +1,25 @@
 import type { Feedback } from "@mockmate/db"
 
 import { MIN_QUESTIONS_FOR_VERDICT } from "@/lib/interview-engine"
+import { SIGNAL_LABELS } from "@/types/interview"
 
 import { FeedbackRating } from "./FeedbackRating"
 
 const SIGNAL_CONFIG = {
   STRONG_HIRE: {
-    label: "Strong Hire",
+    label: SIGNAL_LABELS.STRONG_HIRE,
     className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   },
   HIRE: {
-    label: "Hire",
+    label: SIGNAL_LABELS.HIRE,
     className: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   },
   NO_HIRE: {
-    label: "No Hire",
+    label: SIGNAL_LABELS.NO_HIRE,
     className: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   },
   INCOMPLETE: {
-    label: "Not enough to judge",
+    label: SIGNAL_LABELS.INCOMPLETE,
     className: "bg-muted text-muted-foreground",
   },
 } as const satisfies Record<Feedback["overallSignal"], { label: string; className: string }>
@@ -29,7 +30,7 @@ function ScoreBadge({ score }: { score: number }) {
   return (
     <div className="flex items-baseline gap-1.5">
       <span className="text-2xl font-bold tabular-nums">{score}</span>
-      <span className="text-sm text-muted-foreground">/ 5 — {SCORE_LABELS[score]}</span>
+      <span className="text-sm text-muted-foreground">/ 5 · {SCORE_LABELS[score]}</span>
     </div>
   )
 }
@@ -125,7 +126,7 @@ export function FeedbackDisplay({
         </span>
         {answeredQuestions < plannedQuestions && (
           <p className="text-xs text-muted-foreground">
-            Based on {answeredQuestions} of {plannedQuestions} questions — the
+            Based on {answeredQuestions} of {plannedQuestions} questions. The
             interview ended early, so treat the scores as provisional.
           </p>
         )}

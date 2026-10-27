@@ -8,18 +8,18 @@ move a one-line entry into History and clear the block for the next one.
 
 ## Now building
 
-- **#46 multi-stage interviews**, part 2 of 3: **#73 the loop, owner-only** (`feature/stage-loop`)
-  - Scope: 4 rounds (Screening 3 → Hiring manager 4 → Assessment 3 → Final with a senior
-    leader 2) with round briefs, round-aware directives and answer floors; soft gate
-    (`POST /api/interview/[id]/stage-result`, `RoundGate`, `continueToNextStage`);
-    closing lines guaranteed question-free (`safeClosing`); loop grading grouped by
-    round, a STOP caps STRONG_HIRE; loop budget 120 calls; cron: 24h mid-round, 7 days
-    between rounds, report-no-refund once a round is done. Owner Pro/Max only.
-  - Done: #72 (foundation, PR #75). Next: #74 (rollout to paid).
+- **#78 Atelier hygiene pass** (`fix/atelier-hygiene`), step 1 of the Atelier plan
+  - Scope: font fix (#77) merged back into `develop`; em dashes out of user-facing copy;
+    /login with logo, way back and context; `AppHeader` on dashboard, settings and
+    feedback (logo in the live interview bar); history rows show verdict and scores;
+    saved CV collapsed to one line.
 
 ---
 
 ## History
+
+- 2026-10-27  Multi-round loop, owner-only (#73, PR #76): rounds, soft gates, loop
+  grading and cron rules.  ✓
 
 - 2026-09-28  Stage-aware foundation (#72, PR #75): `Stage`/`StageVerdict`,
   `InterviewSession.stages` + `roundEndedAt`, `Question.stage`, `StageResult`;
