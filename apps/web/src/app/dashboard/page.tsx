@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-10">
-      <div className="flex w-full max-w-4xl items-end justify-between gap-4">
+      <div className="flex w-full max-w-4xl flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">Dashboard</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
